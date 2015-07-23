@@ -83,7 +83,7 @@ define([
                 hideVoucherForm();
             });
 
-            $paymentButtons.find('.payment-button').click(function (e) {
+            $paymentButtons.find('.payment-button[data-default-handler="true"]').click(function (e) {
                 var $btn = $(e.target),
                     deferred = new $.Deferred(),
                     promise = deferred.promise(),
@@ -136,7 +136,7 @@ define([
             onSuccess: onSuccess,
             onFail: onFail,
             onReady: onReady,
-            showVoucherForm: showVoucherForm,
+            showVoucherForm: showVoucherForm
         };
     }
 );

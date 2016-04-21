@@ -66,6 +66,8 @@ class CouponViewSetTest(CouponMixin, CourseCatalogTestMixin, TestCase):
             'categories': [self.category],
             'note': None,
             'max_uses': None,
+            'catalog_query': None,
+            'course_seat_types': None,
         }
 
     def setup_site_configuration(self):
@@ -112,20 +114,6 @@ class CouponViewSetTest(CouponMixin, CourseCatalogTestMixin, TestCase):
         self.assertEqual(coupon.attr.coupon_vouchers.vouchers.count(), 5)
         category = ProductCategory.objects.get(product=coupon).category
         self.assertEqual(category, self.category)
-
-    def test_append_to_existing_coupon(self):
-        """Test adding additional vouchers to an existing coupon."""
-        self.create_coupon(partner=self.partner, catalog=self.catalog)
-        coupon_append = CouponViewSet().create_coupon_product(
-            title='Test coupon',
-            price=100,
-            data=self.coupon_data
-        )
-
-        self.assertEqual(Product.objects.filter(product_class=self.product_class).count(), 1)
-        self.assertEqual(StockRecord.objects.filter(product=coupon_append).count(), 1)
-        self.assertEqual(coupon_append.attr.coupon_vouchers.vouchers.count(), 7)
-        self.assertEqual(coupon_append.attr.coupon_vouchers.vouchers.filter(usage=Voucher.ONCE_PER_CUSTOMER).count(), 2)
 
     def test_custom_code_string(self):
         """Test creating a coupon with custom voucher code."""
@@ -482,15 +470,6 @@ class CouponViewSetFunctionalTest(CouponMixin, CourseCatalogTestMixin, Throttlin
 
         baskets = Basket.objects.filter(lines__product_id=coupon.id)
         self.assertEqual(baskets.first().owner.username, 'Test Client Username')
-
-    def test_exception_for_multi_use_voucher_type(self):
-        """Test that an exception is raised for multi-use voucher types."""
-        self.data.update({
-            'voucher_type': Voucher.MULTI_USE,
-        })
-
-        with self.assertRaises(NotImplementedError):
-            self.client.post(COUPONS_LINK, data=self.data, format='json')
 
     @ddt.data('audit', 'honor')
     def test_restricted_course_mode(self, mode):

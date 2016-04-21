@@ -74,12 +74,11 @@ class UtilsTests(CourseCatalogTestMixin, TestCase):
         title = 'Test coupon'
         _hash = ' '.join((
             unicode(title),
-            unicode(self.catalog.id),
             str(self.partner.id)
         ))
         _hash = md5(_hash.lower()).hexdigest()[-10:]
         expected = _hash.upper()
-        actual = generate_coupon_slug(self.partner, title=title, catalog=self.catalog)
+        actual = generate_coupon_slug(self.partner, title=title)
         self.assertEqual(actual, expected)
 
 
@@ -95,10 +94,9 @@ class CouponUtilsTests(CouponMixin, CourseCatalogTestMixin, TestCase):
         coupon = self.create_coupon(partner=self.partner, catalog=self.catalog)
         _hash = ' '.join((
             unicode(coupon.id),
-            unicode(self.catalog.id),
             str(self.partner.id)
         ))
         digest = md5(_hash.lower()).hexdigest()[-7:]
         expected = digest.upper()
-        actual = generate_sku(coupon, self.partner, catalog=self.catalog)
+        actual = generate_sku(coupon, self.partner)
         self.assertEqual(actual, expected)

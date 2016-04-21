@@ -351,7 +351,9 @@ class CouponMixin(object):
             benefit_value=100,
             note=None,
             max_uses=None,
-            quantity=5
+            quantity=5,
+            catalog_query=None,
+            course_seat_types=None
     ):
         """Helper method for creating a coupon.
 
@@ -362,6 +364,8 @@ class CouponMixin(object):
             catalog(Catalog): Catalog of courses for which the coupon applies
             code(str): Custom coupon code
             benefit_value(int): The voucher benefit value
+            catalog_query(str): course query string
+            course_seat_types(JSONField): List of seat types
 
         Returns:
             coupon (Coupon)
@@ -388,6 +392,8 @@ class CouponMixin(object):
             'categories': [self.category],
             'note': note,
             'max_uses': max_uses,
+            'catalog_query': catalog_query,
+            'course_seat_types': course_seat_types
         }
 
         coupon = CouponViewSet().create_coupon_product(

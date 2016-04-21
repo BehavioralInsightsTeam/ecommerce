@@ -92,32 +92,32 @@ class CouponViewSet(EdxOrderPlacementMixin, viewsets.ModelViewSet):
             client, __ = BusinessClient.objects.get_or_create(name=client_username)
             note = request.data.get('note', None)
             max_uses = request.data.get('max_uses', None)
+            catalog_query = request.data.get(AC.KEYS.CATALOG_QUERY, None)
+            course_seat_types = request.data.get(AC.KEYS.COURSE_SEAT_TYPES, None)
 
             if max_uses:
                 max_uses = int(max_uses)
 
-            # We currently do not support multi-use voucher types.
-            if voucher_type == Voucher.MULTI_USE:
-                raise NotImplementedError('Multi-use voucher types are not supported')
-
             # When a black-listed course mode is received raise an exception.
             # Audit modes do not have a certificate type and therefore will raise
             # an AttributeError exception.
-            seats = Product.objects.filter(stockrecords__id__in=stock_record_ids)
-            for seat in seats:
-                try:
-                    if seat.attr.certificate_type in settings.BLACK_LIST_COUPON_COURSE_MODES:
+            if stock_record_ids:
+                seats = Product.objects.filter(stockrecords__id__in=stock_record_ids)
+                for seat in seats:
+                    try:
+                        if seat.attr.certificate_type in settings.BLACK_LIST_COUPON_COURSE_MODES:
+                            raise Exception('Course mode not supported')
+                    except AttributeError:
                         raise Exception('Course mode not supported')
-                except AttributeError:
-                    raise Exception('Course mode not supported')
 
-            stock_records_string = ' '.join(str(id) for id in stock_record_ids)
-
-            coupon_catalog, __ = get_or_create_catalog(
-                name='Catalog for stock records: {}'.format(stock_records_string),
-                partner=partner,
-                stock_record_ids=stock_record_ids
-            )
+                stock_records_string = ' '.join(str(id) for id in stock_record_ids)
+                coupon_catalog, __ = get_or_create_catalog(
+                    name='Catalog for stock records: {}'.format(stock_records_string),
+                    partner=partner,
+                    stock_record_ids=stock_record_ids
+                )
+            else:
+                coupon_catalog = None
 
             data = {
                 'partner': partner,
@@ -133,6 +133,8 @@ class CouponViewSet(EdxOrderPlacementMixin, viewsets.ModelViewSet):
                 'categories': categories,
                 'note': note,
                 'max_uses': max_uses,
+                'catalog_query': catalog_query,
+                'course_seat_types': course_seat_types
             }
 
             coupon_product = self.create_coupon_product(title, price, data)
@@ -163,6 +165,8 @@ class CouponViewSet(EdxOrderPlacementMixin, viewsets.ModelViewSet):
                 - categories (list of Category objects)
                 - note (str)
                 - max_uses (int)
+                - catalog_query (str)
+                - course_seat_types (list of course seat types)
 
         Returns:
             A coupon product object.
@@ -171,14 +175,10 @@ class CouponViewSet(EdxOrderPlacementMixin, viewsets.ModelViewSet):
             IntegrityError: An error occured when create_vouchers method returns
                             an IntegrityError exception
         """
-        coupon_slug = generate_coupon_slug(title=title, catalog=data['catalog'], partner=data['partner'])
+        coupon_slug = generate_coupon_slug(title=title, partner=data['partner'])
 
         product_class = ProductClass.objects.get(slug='coupon')
-        coupon_product, __ = Product.objects.get_or_create(
-            title=title,
-            product_class=product_class,
-            slug=coupon_slug
-        )
+        coupon_product = Product.objects.create(title=title, product_class=product_class, slug=coupon_slug)
 
         self.assign_categories_to_coupon(coupon=coupon_product, categories=data['categories'])
 
@@ -197,7 +197,9 @@ class CouponViewSet(EdxOrderPlacementMixin, viewsets.ModelViewSet):
                 start_datetime=data['start_date'],
                 voucher_type=data['voucher_type'],
                 max_uses=data['max_uses'],
-                coupon_id=coupon_product.id
+                coupon_id=coupon_product.id,
+                catalog_query=data['catalog_query'],
+                course_seat_types=data['course_seat_types']
             )
         except IntegrityError as ex:
             logger.exception('Failed to create vouchers for [%s] coupon.', coupon_product.title)
@@ -212,7 +214,6 @@ class CouponViewSet(EdxOrderPlacementMixin, viewsets.ModelViewSet):
         sku = generate_sku(
             product=coupon_product,
             partner=data['partner'],
-            catalog=data['catalog'],
         )
 
         stock_record, __ = StockRecord.objects.get_or_create(

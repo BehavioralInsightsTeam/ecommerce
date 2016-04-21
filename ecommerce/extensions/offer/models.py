@@ -1,13 +1,21 @@
 # noinspection PyUnresolvedReferences
 from django.db import models
+from jsonfield.fields import JSONField
 from oscar.apps.offer.abstract_models import AbstractRange
 
 
 class Range(AbstractRange):
     catalog = models.ForeignKey('catalogue.Catalog', blank=True, null=True, related_name='ranges')
+    catalog_query = models.CharField(max_length=255, blank=True, null=True)
+    course_seat_types = JSONField(null=True)
 
     def contains_product(self, product):
-        if self.catalog:
+        # TODO: Add logic to call course_discovery to check the course_run against the query string
+        if self.course_seat_types:
+            return (product.attr.certificate_type.lower() in
+                    [seat.lower() for seat in self.course_seat_types] or  # pylint: disable=not-an-iterable
+                    super(Range, self).contains_product(product))  # pylint: disable=bad-super-call
+        elif self.catalog:
             return (
                 product.id in self.catalog.stock_records.values_list('product', flat=True) or
                 super(Range, self).contains_product(product)  # pylint: disable=bad-super-call

@@ -152,10 +152,19 @@ define([
                 },
                 'input[name=max_uses]': {
                     observe: 'max_uses'
-                }
+                },
+                'input[name=catalog_type]': {
+                    observe: 'catalog_type'
+                },
+                'textarea[name=catalog_query]': {
+                    observe: 'catalog_query'
+                },
             },
 
             events: {
+                'click [name=preview_catalog]': 'previewCatalog',
+                'click [name=catalog_help]': 'getHelpWithCatalog',
+
                 'input [name=course_id]': 'fillFromCourse',
                 'input [name=quantity]': 'changeTotalValue',
 
@@ -171,6 +180,7 @@ define([
 
                 this.listenTo(this.model, 'change:coupon_type', this.toggleFields);
                 this.listenTo(this.model, 'change:voucher_type', this.toggleFields);
+                this.listenTo(this.model, 'change:catalog_type', this.toggleFields);
 
                 this._super();
             },
@@ -186,9 +196,20 @@ define([
                 var hiddenClass = 'hidden';
                 var couponType = this.model.get('coupon_type'),
                     voucherType = this.model.get('voucher_type'),
+                    catalog_type = this.model.get('catalog_type'),
                     formGroup = function (sel) {
                         return this.$el.find(sel).closest('.form-group');
                     }.bind(this);
+
+                if (catalog_type === 'Single course') {
+                    formGroup('[name=catalog_query]').addClass(hiddenClass);
+                    formGroup('[name=course_id]').removeClass(hiddenClass);
+                    formGroup('[name=seat_type]').removeClass(hiddenClass);
+                } else {
+                    formGroup('[name=catalog_query]').removeClass(hiddenClass);
+                    formGroup('[name=course_id]').addClass(hiddenClass);
+                    formGroup('[name=seat_type]').addClass(hiddenClass);
+                }
 
                 if (couponType === 'Discount code') {
                     formGroup('[name=benefit_value]').removeClass(hiddenClass);
@@ -207,17 +228,13 @@ define([
                 }
 
                 // When creating a Once by multiple customers code show the usage number field.
-                if (voucherType !== 'Single use') {
-                    formGroup('[name=max_uses]').removeClass(hiddenClass);
-                } else {
-                    formGroup('[name=max_uses]').addClass(hiddenClass);
-                }
-
                 // The only time we allow for a generation of multiple codes is
                 // when they are of type single use.
                 if (voucherType === 'Single use') {
                     formGroup('[name=quantity]').removeClass(hiddenClass);
+                    formGroup('[name=max_uses]').addClass(hiddenClass);
                 } else {
+                    formGroup('[name=max_uses]').removeClass(hiddenClass);
                     formGroup('[name=quantity]').addClass(hiddenClass);
                 }
             },
@@ -303,6 +320,29 @@ define([
 
             getSeatType: function () {
                 return this.$el.find('[name=seat_type]').val();
+            },
+
+            previewCatalog: function (event) {
+                // TODO:
+                // Make an AJAX call to the API endpoint that will process dynamic catalog query
+                event.preventDefault();
+
+                var courses = ['Course 1', 'Course 2'];
+                this.courses = _.map(courses, function (course) {
+                    return $('<li></li>')
+                        .text(course);
+                });
+
+
+                this.$el.find('#number_of_courses > .value').html('2');
+                this.$el.find('#courses > .value > ul').html(this.courses);
+            },
+
+            getHelpWithCatalog: function (event) {
+                // TODO:
+                // Update this function once the requirements are provided
+                event.preventDefault();
+                alert('Get Help With Catalog');
             },
 
             render: function () {

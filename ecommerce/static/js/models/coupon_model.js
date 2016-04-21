@@ -37,19 +37,27 @@ define([
                 code: '',
                 price: 0,
                 total_value: 0,
-                max_uses: 1
+                max_uses: 1,
+                seats: [],
             },
 
             validation: {
                 category: {required: true},
                 course_id: {
                     pattern: 'courseId',
-                    msg: gettext('A valid course ID is required')
+                    msg: gettext('A valid course ID is required'),
+                    required: function () {
+                        return this.get('catalog_type') === 'Single course';
+                    }
                 },
                 title: {required: true},
                 client: {required: true},
                 // seat_type is for validation only, stock_record_ids holds the values
-                seat_type: {required: true},
+                seat_type: {
+                    required: function () {
+                        return this.get('catalog_type') === 'Single course';
+                    }
+                },
                 quantity: {pattern: 'number'},
                 price: {pattern: 'number'},
                 benefit_value: {
@@ -62,6 +70,11 @@ define([
                     required: false,
                     rangeLength: [8, 16],
                     msg: gettext('Code field must be empty or between 8 and 16 characters')
+                },
+                catalog_query: {
+                    required: function () {
+                        return this.get('catalog_type') === 'Multiple courses';
+                    }
                 },
                 start_date: function (val) {
                     var startDate,
@@ -112,7 +125,8 @@ define([
             },
 
             getSeatPrice: function () {
-                return this.get('seats')[0].price;
+                var seats = this.get('seats');
+                return seats[0] ? seats[0].price : '';
             },
 
             updateTotalValue: function (seat_price) {
@@ -120,12 +134,18 @@ define([
             },
 
             updateSeatData: function () {
-                var seat_data = this.get('seats')[0].attribute_values,
+                var seats = this.get('seats');
+
+                this.set('catalog_type', seats.length > 1 ? 'Multiple courses' : 'Single course');
+
+                if (seats[0]) {
+                    var seat_data = seats[0].attribute_values,
                     seat_type = _.findWhere(seat_data, {'name': 'certificate_type'}),
                     course_id = _.findWhere(seat_data, {'name': 'course_key'});
-                this.set('seat_type', seat_type ? seat_type.value : '');
-                this.set('course_id', course_id ? course_id.value : '');
-                this.updateTotalValue(this.getSeatPrice());
+                    this.set('seat_type', seat_type ? seat_type.value : '');
+                    this.set('course_id', course_id ? course_id.value : '');
+                    this.updateTotalValue(this.getSeatPrice());
+                }
             },
 
             updateVoucherData: function () {
@@ -161,6 +181,8 @@ define([
                 data.start_date = moment.utc(this.get('start_date'));
                 data.end_date = moment.utc(this.get('end_date'));
                 data.category_ids = [ this.get('category') ];
+
+                console.log(data.catalog_query);
 
                 // Enrollment code always gives 100% discount
                 switch (this.get('coupon_type')) {

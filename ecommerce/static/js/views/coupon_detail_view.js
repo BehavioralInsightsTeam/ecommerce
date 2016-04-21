@@ -77,15 +77,24 @@ define([
             },
 
             render: function () {
-                var course_data = this.model.get('seats')[0].attribute_values,
+                var seats = this.model.get('seats'),
+                    course_data = [],
+                    course_id = '',
+                    certificate_type = '',
                     html,
                     voucher = this.model.get('vouchers')[0],
                     category = this.model.get('categories')[0].name,
                     note = this.model.get('note');
 
+                if (seats[0]) {
+                    course_data = seats[0].attribute_values;
+                    course_id = this.courseID(course_data);
+                    certificate_type = this.certificateType(course_data);
+                }
+
                 html = this.template({
-                    course_id: this.courseID(course_data),
-                    certificate_type: this.certificateType(course_data),
+                    course_id: course_id,
+                    certificate_type: certificate_type,
                     coupon: this.model.attributes,
                     couponType: this.couponType(voucher),
                     codeStatus: this.codeStatus(voucher),

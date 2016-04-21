@@ -12,6 +12,56 @@
     .help-block {
         margin: 0;
     }
+
+    .catalog-type {
+        padding-top: 30px;
+        height: 61px;
+
+        label {
+            padding: 0 10px;
+        }
+    }
+
+    .catalog-query {
+        p {
+            margin-bottom: 20px;
+        }
+
+        button {
+            margin-right: 10px;
+        }
+    }
+
+    #catalogModal {
+        .modal-header {
+            border: none;
+
+            .modal-title {
+                text-align: center;
+                font-weight: 800;
+            }
+        }
+
+        #number_of_courses {
+            .heading {
+                float: left;
+            }
+            .value {
+                display: inline-block;
+                padding-left: 10px;
+            }
+        }
+
+        #courses {
+            .heading {
+                padding-bottom: 10px;
+            }
+        }
+
+        .info-item {
+            padding-bottom: 10px;
+        }
+    }
 }
 
 .coupon-detail-view {

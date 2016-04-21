@@ -428,8 +428,11 @@ class CouponSerializer(ProductPaymentInfoMixin, serializers.ModelSerializer):
 
     def get_seats(self, obj):
         offer = self.retrieve_offer(obj)
-        stockrecords = offer.condition.range.catalog.stock_records.all()
-        seats = Product.objects.filter(id__in=[sr.product.id for sr in stockrecords])
+        if offer.condition.range.catalog:
+            stockrecords = offer.condition.range.catalog.stock_records.all()
+            seats = Product.objects.filter(id__in=[sr.product.id for sr in stockrecords])
+        else:
+            seats = None
         serializer = ProductSerializer(seats, many=True, context={'request': self.context['request']})
         return serializer.data
 

@@ -37,19 +37,28 @@ define([
                 code: '',
                 price: 0,
                 total_value: 0,
-                max_uses: 1
+                max_uses: 1,
+                seats: [],
+                course_seats: [],
             },
 
             validation: {
                 category: {required: true},
                 course_id: {
                     pattern: 'courseId',
-                    msg: gettext('A valid course ID is required')
+                    msg: gettext('A valid course ID is required'),
+                    required: function () {
+                        return this.get('catalog_type') === 'Single course';
+                    }
                 },
                 title: {required: true},
                 client: {required: true},
                 // seat_type is for validation only, stock_record_ids holds the values
-                seat_type: {required: true},
+                seat_type: {
+                    required: function () {
+                        return this.get('catalog_type') === 'Single course';
+                    }
+                },
                 quantity: {pattern: 'number'},
                 price: {pattern: 'number'},
                 benefit_value: {
@@ -62,6 +71,11 @@ define([
                     required: false,
                     rangeLength: [8, 16],
                     msg: gettext('Code field must be empty or between 8 and 16 characters')
+                },
+                catalog_query: {
+                    required: function () {
+                        return this.get('catalog_type') === 'Multiple courses';
+                    }
                 },
                 start_date: function (val) {
                     var startDate,
@@ -112,20 +126,53 @@ define([
             },
 
             getSeatPrice: function () {
-                return this.get('seats')[0].price;
+                var seats = this.get('seats');
+                return seats[0] ? seats[0].price : '';
             },
 
             updateTotalValue: function (seat_price) {
                 this.set('total_value', this.get('quantity') * seat_price);
             },
 
+            getCertificateType: function(seat_data) {
+                var seat_type = _.findWhere(seat_data, {'name': 'certificate_type'});
+                return seat_type ? seat_type.value : '';
+            },
+
+            getCourseID: function(seat_data) {
+                var course_id = _.findWhere(seat_data, {'name': 'course_key'});
+                return course_id ? course_id.value : '';
+            },
+
             updateSeatData: function () {
-                var seat_data = this.get('seats')[0].attribute_values,
-                    seat_type = _.findWhere(seat_data, {'name': 'certificate_type'}),
-                    course_id = _.findWhere(seat_data, {'name': 'course_key'});
-                this.set('seat_type', seat_type ? seat_type.value : '');
-                this.set('course_id', course_id ? course_id.value : '');
-                this.updateTotalValue(this.getSeatPrice());
+                var seats = this.get('seats');
+
+                if (seats.length < 2) {
+                    this.set('catalog_type', 'Single course');
+
+                    if (seats[0]) {
+                        var seat_data = seats[0].attribute_values;
+
+                        this.set('seat_type', this.getCertificateType(seat_data));
+                        this.set('course_id', this.getCourseID(seat_data));
+                        this.updateTotalValue(this.getSeatPrice());
+                    }
+                } else {
+                    this.set('catalog_type', 'Multiple courses');
+
+                    var coupon_courses_data = [];
+
+                    _.each(seats, function(seat) {
+                        var seat_data = seat.attribute_values;
+
+                        coupon_courses_data.push({
+                            'seat_type': this.getCertificateType(seat_data),
+                            'course_id': this.getCourseID(seat_data)
+                        });
+                    }, this);
+
+                    this.set('courses', coupon_courses_data);
+                }
             },
 
             updateVoucherData: function () {

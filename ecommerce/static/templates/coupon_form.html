@@ -102,6 +102,15 @@
 
     <div class="fields col-md-6">
         <div class="form-group">
+            <div class="form-inline catalog-type">
+                <input id="single_course" type="radio" name="catalog_type" value="Single course">
+                <label for="single_course"><%= gettext('Single course') %></label>
+                <input id="multiple_courses" type="radio" name="catalog_type" value="Multiple courses">
+                <label for="multiple_courses"><%= gettext('Multiple courses') %></label>
+            </div>
+            <p class="help-block"></p>
+        </div>
+        <div class="form-group">
             <label for="course_id"><%= gettext('Course ID') %> *</label>
             <input type="text" class="form-control" name="course_id">
             <p class="help-block"></p>
@@ -110,6 +119,46 @@
             <label for="seat_type"><%= gettext('Seat Type') %> *</label>
             <select class="form-control" name="seat_type"></select>
             <p class="help-block"></p>
+        </div>
+        <div class="form-group catalog-query">
+            <label for="catalog_query"><%= gettext('Valid for:') %> *</label>
+            <textarea class="form-control" name="catalog_query" rows="10"></textarea>
+            <p class="help-block"></p>
+            <button name="preview_catalog" data-toggle="modal" data-target="#catalogModal"><%= gettext('Preview') %></button>
+            <button name="catalog_help"><%= gettext('Help') %></button>
+        </div>
+        <div class="form-group course-seat-types">
+            <input id="audit" type="checkbox" name="course_seat_types" value="Audit">
+            <label for="audit"><%= gettext('Audit') %></label>
+            <input id="credit" type="checkbox" name="course_seat_types" value="Credit">
+            <label for="credit"><%= gettext('Credit') %></label>
+            <input id="verified" type="checkbox" name="course_seat_types" value="Verified">
+            <label for="verified"><%= gettext('Verified') %></label>
+        </div>
+        <div class="modal fade" id="catalogModal" tabindex="-1" role="dialog" aria-labelledby="catalogModalLabel">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="catalogModalLabel"><%= gettext('Catalog Details') %></h4>
+                  </div>
+                  <div class="modal-body">
+                    <div class="info-item" id="number_of_courses">
+                      <div class="heading"><%= gettext('Number of courses:') %></div>
+                      <div class="value"></div>
+                    </div>
+                    <div class="info-item" id="courses">
+                      <div class="heading"><%= gettext('Courses') %></div>
+                      <div class="value">
+                        <ul class="list-unstyled">
+                        </ul>
+                      </div>
+                      <ul class="pagination">
+                      </ul>
+                    </div>
+                  </div>
+              </div>
+            </div>
         </div>
         <div class="form-group">
             <label for="note"><%= gettext('Note') %></label>

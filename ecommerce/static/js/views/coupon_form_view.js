@@ -12,7 +12,8 @@ define([
         'utils/utils',
         'text!templates/coupon_form.html',
         'models/course_model',
-        'views/form_view'
+        'collections/course_collection',
+        'views/form_view',
     ],
     function ($,
               Backbone,
@@ -25,6 +26,7 @@ define([
               Utils,
               CouponFormTemplate,
               Course,
+              Courses,
               FormView) {
         'use strict';
 
@@ -56,6 +58,10 @@ define([
                 {
                     value: 'Once per customer',
                     label: gettext('Can be used once by multiple customers')
+                },
+                {
+                    value: 'Multi-use',
+                    label: gettext('Can be used multiple times by multiple customers'),
                 }
             ],
 
@@ -152,10 +158,22 @@ define([
                 },
                 'input[name=max_uses]': {
                     observe: 'max_uses'
-                }
+                },
+                'input[name=catalog_type]': {
+                    observe: 'catalog_type'
+                },
+                'textarea[name=catalog_query]': {
+                    observe: 'catalog_query'
+                },
+                'input[name=course_seat_types]': {
+                    observe: 'course_seat_types'
+                },
             },
 
             events: {
+                'click [name=preview_catalog]': 'previewCatalog',
+                'click [name=catalog_help]': 'getHelpWithCatalog',
+
                 'input [name=course_id]': 'fillFromCourse',
                 'input [name=quantity]': 'changeTotalValue',
 
@@ -174,6 +192,7 @@ define([
                 this.listenTo(this.model, 'change:voucher_type', this.toggleVoucherTypeField);
                 this.listenTo(this.model, 'change:code', this.toggleCodeField);
                 this.listenTo(this.model, 'change:quantity', this.toggleQuantityField);
+                this.listenTo(this.model, 'change:catalog_type', this.toggleCatalogTypeField);
 
                 this._super();
             },
@@ -213,6 +232,20 @@ define([
                 } else {
                     this.formGroup('[name=benefit_value]').addClass(this.hiddenClass);
                     this.formGroup('[name=code]').addClass(this.hiddenClass);
+                }
+            },
+
+            toggleCatalogTypeField: function () {
+                if (this.model.get('catalog_type') === 'Single course') {
+                    this.formGroup('[name=catalog_query]').addClass(this.hiddenClass);
+                    this.formGroup('[name=course_seat_types]').addClass(this.hiddenClass);
+                    this.formGroup('[name=course_id]').removeClass(this.hiddenClass);
+                    this.formGroup('[name=seat_type]').removeClass(this.hiddenClass);
+                } else {
+                    this.formGroup('[name=catalog_query]').removeClass(this.hiddenClass);
+                    this.formGroup('[name=course_seat_types]').removeClass(this.hiddenClass);
+                    this.formGroup('[name=course_id]').addClass(this.hiddenClass);
+                    this.formGroup('[name=seat_type]').addClass(this.hiddenClass);
                 }
             },
 
@@ -351,6 +384,48 @@ define([
 
             getSeatType: function () {
                 return this.$el.find('[name=seat_type]').val();
+            },
+
+            previewCatalog: function (event) {
+                // TODO:
+                // Make an AJAX call to the API endpoint that will process dynamic catalog query
+                event.preventDefault();
+
+                var courses = [
+                    new Course({
+                        'id': 'course-v1:1+1+1',
+                        'url': 'http://localhost:8000/courses/course-v1:1+1+1',
+                        'name': 'Course 1'
+                    }),
+                    new Course({
+                        'id': 'course-v1:2+2+2',
+                        'url': 'http://localhost:8000/courses/course-v1:2+2+2',
+                        'name': 'Course 2'
+                    })
+                ],
+                number_of_pages = 5,
+                course_collection = new Courses().add(courses);
+                this.courses = _.map(course_collection, function (course) {
+                    return $('<li></li>').text(course.get('id'));
+                });
+
+                if (number_of_pages > 1) {
+                    _.times(number_of_pages, function(n) {
+                        $('ul.pagination').append(_s.sprintf('<li><a href="#">%d</a></li>', n+1));
+                    });
+                }
+
+                this.$el.find('#number_of_courses > .value').html('2');
+                this.$el.find('#courses > .value > ul').html(this.courses);
+            },
+
+            getHelpWithCatalog: function (event) {
+                // TODO:
+                // Update this function once the requirements are provided
+                var url = 'https://stage-edx-discovery.edx.org/';
+                event.preventDefault();
+
+                window.open(url, '_blank');
             },
 
             render: function () {

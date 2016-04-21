@@ -42,16 +42,6 @@ define([
                 );
             },
 
-            courseID: function(course_data) {
-                var course_id = _.findWhere(course_data, {'name': 'course_key'});
-                return course_id ? course_id.value : '';
-            },
-
-            certificateType: function(course_data) {
-                var certificate_type = _.findWhere(course_data, {'name': 'certificate_type'});
-                return certificate_type ? gettext(this.capitalize(certificate_type.value)) : '';
-            },
-
             discountValue: function(voucher) {
                 var benefitType = voucher.benefit[0],
                     benefitValue = voucher.benefit[1],
@@ -70,6 +60,8 @@ define([
             usageLimitation: function(voucher) {
                 if (voucher.usage === 'Single use') {
                     return gettext('Can be used once by one customer');
+                } else if (voucher.usage === 'Multi-use') {
+                    return gettext('Can be used multiple times by multiple customers');
                 } else if (voucher.usage === 'Once per customer') {
                     return gettext('Can be used once by multiple customers');
                 }
@@ -77,15 +69,12 @@ define([
             },
 
             render: function () {
-                var course_data = this.model.get('seats')[0].attribute_values,
-                    html,
+                var html,
                     voucher = this.model.get('vouchers')[0],
                     category = this.model.get('categories')[0].name,
                     note = this.model.get('note');
 
                 html = this.template({
-                    course_id: this.courseID(course_data),
-                    certificate_type: this.certificateType(course_data),
                     coupon: this.model.attributes,
                     couponType: this.couponType(voucher),
                     codeStatus: this.codeStatus(voucher),
@@ -101,6 +90,7 @@ define([
 
                 this.$el.html(html);
                 this.renderVoucherTable();
+                this.renderCourseData();
                 this.delegateEvents();
                 return this;
             },
@@ -125,6 +115,30 @@ define([
                     data: this.model.get('vouchers')
                 });
                 return this;
+            },
+
+            renderCourseData: function () {
+                if (this.model.get('catalog_type') === 'Single course') {
+                    this.$el.find('.course-info').append(
+                        _s.sprintf(
+                            '<div class="value">%s<span class="pull-right">%s</span></div>',
+                            this.model.get('course_id'),
+                            this.model.get('seat_type'))
+                    );
+                } else if (this.model.get('catalog_type') === 'Multiple courses') {
+                    var courses = this.model.get('courses');
+
+                    _.each(courses, function(course) {
+                        this.$el.find('.course-info').append(
+                            _s.sprintf(
+                                '<div class="value">%s<span class="pull-right">%s</span></div>',
+                                course.course_id,
+                                course.seat_type)
+                        );
+                    });
+
+                    this.$el.find('.catalog-query > .value').text(this.model.get('catalog-query'));
+                }
             },
 
             downloadCouponReport: function (event) {

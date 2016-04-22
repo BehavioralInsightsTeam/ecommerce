@@ -159,6 +159,9 @@ define([
                 'textarea[name=catalog_query]': {
                     observe: 'catalog_query'
                 },
+                'input[name=course_seats]': {
+                    observe: 'course_seats'
+                },
             },
 
             events: {
@@ -203,10 +206,12 @@ define([
 
                 if (catalog_type === 'Single course') {
                     formGroup('[name=catalog_query]').addClass(hiddenClass);
+                    formGroup('[name=course_seats]').addClass(hiddenClass);
                     formGroup('[name=course_id]').removeClass(hiddenClass);
                     formGroup('[name=seat_type]').removeClass(hiddenClass);
                 } else {
                     formGroup('[name=catalog_query]').removeClass(hiddenClass);
+                    formGroup('[name=course_seats]').removeClass(hiddenClass);
                     formGroup('[name=course_id]').addClass(hiddenClass);
                     formGroup('[name=seat_type]').addClass(hiddenClass);
                 }

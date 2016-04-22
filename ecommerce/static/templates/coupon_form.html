@@ -127,6 +127,16 @@
             <button name="preview_catalog" data-toggle="modal" data-target="#catalogModal"><%= gettext('Preview') %></button>
             <button name="catalog_help"><%= gettext('Help') %></button>
         </div>
+        <div class="form-group course-seats">
+            <input id="verified" type="checkbox" name="course_seats" value="Verified">
+            <label for="verified"><%= gettext('Verified') %></label>
+            <input id="professional" type="checkbox" name="course_seats" value="Professional">
+            <label for="professional"><%= gettext('Professional') %></label>
+            <input id="audit" type="checkbox" name="course_seats" value="Audit">
+            <label for="audit"><%= gettext('Audit') %></label>
+            <input id="honor" type="checkbox" name="course_seats" value="Honor">
+            <label for="honor"><%= gettext('Honor') %></label>
+        </div>
         <div class="modal fade" id="catalogModal" tabindex="-1" role="dialog" aria-labelledby="catalogModalLabel">
             <div class="modal-dialog" role="document">
               <div class="modal-content">

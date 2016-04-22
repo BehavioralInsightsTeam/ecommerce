@@ -39,6 +39,7 @@ define([
                 total_value: 0,
                 max_uses: 1,
                 seats: [],
+                course_seats: [],
             },
 
             validation: {
@@ -183,6 +184,7 @@ define([
                 data.category_ids = [ this.get('category') ];
 
                 console.log(data.catalog_query);
+                console.log(data.course_seats);
 
                 // Enrollment code always gives 100% discount
                 switch (this.get('coupon_type')) {

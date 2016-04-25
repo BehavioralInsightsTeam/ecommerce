@@ -56,6 +56,10 @@ define([
                 {
                     value: 'Once per customer',
                     label: gettext('Can be used once by multiple customers')
+                },
+                {
+                    value: 'Multi-use',
+                    label: gettext('Can be used multiple times by multiple customers'),
                 }
             ],
 
@@ -159,8 +163,8 @@ define([
                 'textarea[name=catalog_query]': {
                     observe: 'catalog_query'
                 },
-                'input[name=course_seats]': {
-                    observe: 'course_seats'
+                'input[name=course_seat_types]': {
+                    observe: 'course_seat_types'
                 },
             },
 
@@ -206,12 +210,12 @@ define([
 
                 if (catalog_type === 'Single course') {
                     formGroup('[name=catalog_query]').addClass(hiddenClass);
-                    formGroup('[name=course_seats]').addClass(hiddenClass);
+                    formGroup('[name=course_seat_types]').addClass(hiddenClass);
                     formGroup('[name=course_id]').removeClass(hiddenClass);
                     formGroup('[name=seat_type]').removeClass(hiddenClass);
                 } else {
                     formGroup('[name=catalog_query]').removeClass(hiddenClass);
-                    formGroup('[name=course_seats]').removeClass(hiddenClass);
+                    formGroup('[name=course_seat_types]').removeClass(hiddenClass);
                     formGroup('[name=course_id]').addClass(hiddenClass);
                     formGroup('[name=seat_type]').addClass(hiddenClass);
                 }
@@ -334,8 +338,7 @@ define([
 
                 var courses = ['Course 1', 'Course 2'];
                 this.courses = _.map(courses, function (course) {
-                    return $('<li></li>')
-                        .text(course);
+                    return $('<li></li>').text(course);
                 });
 
 

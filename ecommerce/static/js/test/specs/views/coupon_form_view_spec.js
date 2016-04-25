@@ -156,6 +156,71 @@ define([
                     expect(visible('[name=max_uses]')).toBe(true);
                 });
             });
+
+            describe('dynamic catalog', function () {
+                beforeEach(function () {
+                    view.$el.find('[name=catalog_type]').val('Multiple courses').trigger('change');
+                });
+
+                it('should call previewCatalog when Preview Catalog button was clicked', function () {
+                    spyOn(view, 'previewCatalog');
+                    view.delegateEvents();
+
+                    view.$el.find('[name=preview_catalog]').trigger('click');
+                    expect(view.previewCatalog).toHaveBeenCalled();
+                });
+
+                it('should call getHelpWithCatalog when Get Help button was clicked', function () {
+                    spyOn(view, 'getHelpWithCatalog');
+                    view.delegateEvents();
+
+                    view.$el.find('[name=catalog_help]').trigger('click');
+                    expect(view.getHelpWithCatalog).toHaveBeenCalled();
+                });
+
+                it('should call toggleFields when Catalog Type is changed', function () {
+                    var catalogQueryFormGroup = view.$el.find('[name=catalog_query]').closest('.form-group'),
+                        courseSeatTypesFormGroup = view.$el.find('[name=course_seat_types]').closest('.form-group'),
+                        courseIDFormGroup = view.$el.find('[name=course_id]').closest('.form-group'),
+                        seatTypeFormGroup = view.$el.find('[name=seat_type]').closest('.form-group');
+
+                    view.model.set('catalog_type', 'Single course');
+                    view.toggleFields();
+
+                    expect(catalogQueryFormGroup.hasClass('hidden')).toBeTruthy();
+                    expect(courseSeatTypesFormGroup.hasClass('hidden')).toBeTruthy();
+                    expect(courseIDFormGroup.hasClass('hidden')).toBeFalsy();
+                    expect(seatTypeFormGroup.hasClass('hidden')).toBeFalsy();
+
+                    view.model.set('catalog_type', 'Multiple courses');
+                    view.toggleFields();
+
+                    expect(catalogQueryFormGroup.hasClass('hidden')).toBeFalsy();
+                    expect(courseSeatTypesFormGroup.hasClass('hidden')).toBeFalsy();
+                    expect(courseIDFormGroup.hasClass('hidden')).toBeTruthy();
+                    expect(seatTypeFormGroup.hasClass('hidden')).toBeTruthy();
+                });
+
+                it('should list the courses when the previewCatalog is called', function () {
+                    var event = $.Event('click');
+
+                    spyOn(event, 'preventDefault');
+                    view.previewCatalog(event);
+
+                    expect(event.preventDefault).toHaveBeenCalled();
+                    expect(view.$el.find('#number_of_courses > .value').html()).toEqual('2');
+                    expect(view.$el.find('#courses > .value > ul').children().length).toEqual(2);
+                });
+
+                it('should provide help when the getHelpWithCatalog is called', function () {
+                    var event = $.Event('click');
+
+                    spyOn(event, 'preventDefault');
+                    view.getHelpWithCatalog(event);
+
+                    expect(event.preventDefault).toHaveBeenCalled();
+                });
+            });
         });
     }
 );

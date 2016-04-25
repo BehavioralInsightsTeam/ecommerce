@@ -70,6 +70,8 @@ define([
             usageLimitation: function(voucher) {
                 if (voucher.usage === 'Single use') {
                     return gettext('Can be used once by one customer');
+                } else if (voucher.usage === 'Multi-use') {
+                    return gettext('Can be used multiple times by multiple customers');
                 } else if (voucher.usage === 'Once per customer') {
                     return gettext('Can be used once by multiple customers');
                 }

@@ -4,6 +4,7 @@ from oscar.core.loading import get_model
 from oscar.test.factories import create_order
 from oscar.test.newfactories import BasketFactory
 
+from ecommerce.core.constants import ENROLLMENT_CODE
 from ecommerce.courses.models import Course
 from ecommerce.courses.publishers import LMSPublisher
 from ecommerce.courses.tests.factories import CourseFactory
@@ -88,7 +89,7 @@ class CourseTests(CourseCatalogTestMixin, TestCase):
         self.assertEqual(parent.attr.course_key, course.id)
 
     def assert_course_seat_valid(self, seat, course, certificate_type, id_verification_required, price,
-                                 credit_provider=None, credit_hours=None):
+                                 credit_provider=None, credit_hours=None, create_enrollment_code=False):
         """ Ensure the given seat has the correct attribute values. """
         self.assertEqual(seat.structure, Product.CHILD)
         # pylint: disable=protected-access
@@ -104,6 +105,10 @@ class CourseTests(CourseCatalogTestMixin, TestCase):
 
         if credit_hours:
             self.assertEqual(seat.attr.credit_hours, credit_hours)
+
+        if create_enrollment_code:
+            enrollment_code = Product.objects.get(product_class__name=ENROLLMENT_CODE)
+            self.assertEqual(seat.attr.enrollment_code, enrollment_code)
 
     def test_create_or_update_seat(self):
         """ Verify the method creates or updates a seat Product. """
@@ -129,10 +134,27 @@ class CourseTests(CourseCatalogTestMixin, TestCase):
         seat = course.seat_products[0]
         self.assert_course_seat_valid(seat, course, certificate_type, id_verification_required, price)
 
+    def test_create_seat_with_enrollment_code(self):
+        """Verify an enrollment code product is created and added as an attribute to the seat."""
+        course = CourseFactory()
+        certificate_type = 'verified'
+        id_verification_required = True
+        price = 5
+        create_enrollment_code = True
+
+        seat = course.create_or_update_seat(
+            certificate_type, id_verification_required, price,
+            self.partner, create_enrollment_code=create_enrollment_code
+        )
+        self.assert_course_seat_valid(
+            seat, course, certificate_type, id_verification_required,
+            price, create_enrollment_code=create_enrollment_code
+        )
+
     def test_create_credit_seats(self):
         """Verify that the model's seat creation method allows the creation of multiple credit seats."""
         course = Course.objects.create(id='a/b/c', name='Test Course')
-        credit_data = {'MIT': 2, 'Harvard': 0.5}
+        credit_data = {'MIT': 2, 'Harvard': 1}
         certificate_type = 'credit'
         id_verification_required = True
         price = 10

@@ -4,6 +4,8 @@ import logging
 from oscar.core.loading import get_model
 from oscar.test import factories
 
+from ecommerce.core.constants import ENROLLMENT_CODE
+
 logger = logging.getLogger(__name__)
 
 Category = get_model('catalogue', 'Category')
@@ -23,6 +25,7 @@ class CourseCatalogTestMixin(object):
 
         # Force the creation of a seat ProductClass
         self.seat_product_class  # pylint: disable=pointless-statement
+        self.enrollment_code_product_class  # pylint: disable=pointless-statement
         self.category, _created = Category.objects.get_or_create(name='Seats', defaults={'depth': 1})
 
     @property
@@ -37,6 +40,23 @@ class CourseCatalogTestMixin(object):
                 ('credit_provider', 'text'),
                 ('id_verification_required', 'boolean'),
                 ('credit_hours', 'integer'),
+                ('enrollment_code', 'entity')
+            )
+
+            for code, attr_type in attributes:
+                factories.ProductAttributeFactory(code=code, name=code, product_class=pc, type=attr_type)
+
+        return pc
+
+    @property
+    def enrollment_code_product_class(self):
+        defaults = {'requires_shipping': False, 'track_stock': False, 'name': ENROLLMENT_CODE}
+        pc, created = ProductClass.objects.get_or_create(slug='enrollment_code', defaults=defaults)
+
+        if created:
+            attributes = (
+                ('seat_type', 'text'),
+                ('course_key', 'text')
             )
 
             for code, attr_type in attributes:

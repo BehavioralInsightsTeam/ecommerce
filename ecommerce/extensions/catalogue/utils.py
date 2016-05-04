@@ -58,18 +58,3 @@ def get_or_create_catalog(name, partner, stock_record_ids):
             catalog.stock_records.add(stock_record)
 
     return catalog, True
-
-
-def generate_coupon_slug(partner, title):
-    """
-    Generates a unique slug value for a coupon from the
-    partner, title and catalog. Used to differentiate products.
-    """
-    _hash = ' '.join((
-        unicode(title),
-        str(partner.id)
-    ))
-    md5_hash = md5(_hash.lower())
-    digest = md5_hash.hexdigest()[-10:]
-
-    return digest.upper()

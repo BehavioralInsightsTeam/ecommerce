@@ -5,7 +5,7 @@ from hashlib import md5
 from oscar.core.loading import get_model
 
 from ecommerce.extensions.catalogue.tests.mixins import CourseCatalogTestMixin
-from ecommerce.extensions.catalogue.utils import generate_sku, get_or_create_catalog, generate_coupon_slug
+from ecommerce.extensions.catalogue.utils import generate_sku, get_or_create_catalog
 from ecommerce.tests.mixins import CouponMixin
 from ecommerce.tests.testcases import TestCase
 
@@ -68,18 +68,6 @@ class UtilsTests(CourseCatalogTestMixin, TestCase):
         self.assertTrue(created)
         self.assertNotEqual(self.catalog, new_catalog)
         self.assertEqual(Catalog.objects.count(), 2)
-
-    def test_generate_coupon_slug(self):
-        """Verify the method generates proper slug."""
-        title = 'Test coupon'
-        _hash = ' '.join((
-            unicode(title),
-            str(self.partner.id)
-        ))
-        _hash = md5(_hash.lower()).hexdigest()[-10:]
-        expected = _hash.upper()
-        actual = generate_coupon_slug(self.partner, title=title)
-        self.assertEqual(actual, expected)
 
 
 class CouponUtilsTests(CouponMixin, CourseCatalogTestMixin, TestCase):

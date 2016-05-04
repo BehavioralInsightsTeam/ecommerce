@@ -21,7 +21,7 @@ from ecommerce.extensions.api.constants import APIConstants as AC
 from ecommerce.extensions.api.filters import ProductFilter
 from ecommerce.extensions.api.serializers import CategorySerializer, CouponSerializer, CouponListSerializer
 from ecommerce.extensions.basket.utils import prepare_basket
-from ecommerce.extensions.catalogue.utils import generate_coupon_slug, generate_sku, get_or_create_catalog
+from ecommerce.extensions.catalogue.utils import generate_sku, get_or_create_catalog
 from ecommerce.extensions.checkout.mixins import EdxOrderPlacementMixin
 from ecommerce.extensions.payment.processors.invoice import InvoicePayment
 from ecommerce.extensions.voucher.models import CouponVouchers
@@ -175,10 +175,9 @@ class CouponViewSet(EdxOrderPlacementMixin, viewsets.ModelViewSet):
             IntegrityError: An error occured when create_vouchers method returns
                             an IntegrityError exception
         """
-        coupon_slug = generate_coupon_slug(title=title, partner=data['partner'])
 
         product_class = ProductClass.objects.get(slug='coupon')
-        coupon_product = Product.objects.create(title=title, product_class=product_class, slug=coupon_slug)
+        coupon_product = Product.objects.create(title=title, product_class=product_class)
 
         self.assign_categories_to_coupon(coupon=coupon_product, categories=data['categories'])
 

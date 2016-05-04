@@ -132,7 +132,7 @@ class CourseTests(CourseCatalogTestMixin, TestCase):
     def test_create_credit_seats(self):
         """Verify that the model's seat creation method allows the creation of multiple credit seats."""
         course = Course.objects.create(id='a/b/c', name='Test Course')
-        credit_data = {'MIT': 2, 'Harvard': 0.5}
+        credit_data = {'MIT': 2, 'Harvard': 1}
         certificate_type = 'credit'
         id_verification_required = True
         price = 10

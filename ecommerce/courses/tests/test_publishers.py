@@ -146,7 +146,8 @@ class LMSPublisherTests(CourseCatalogTestMixin, TestCase):
             'currency': 'USD',
             'price': int(stock_record.price_excl_tax),
             'sku': stock_record.partner_sku,
-            'expires': None
+            'bulk_sku': None,
+            'expires': None,
         }
         self.assertDictEqual(actual, expected)
 
@@ -177,7 +178,8 @@ class LMSPublisherTests(CourseCatalogTestMixin, TestCase):
             'currency': 'USD',
             'price': int(stock_record.price_excl_tax),
             'sku': stock_record.partner_sku,
-            'expires': None
+            'bulk_sku': None,
+            'expires': None,
         }
         self.assertDictEqual(actual, expected)
 

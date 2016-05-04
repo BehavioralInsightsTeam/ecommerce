@@ -33,7 +33,7 @@ class LMSPublisher(object):
         stock_record = seat.stockrecords.first()
         try:
             bulk_sku = StockRecord.objects.get(product=seat.attr.enrollment_code).partner_sku
-        except StockRecord.DoesNotExist:
+        except (StockRecord.DoesNotExist, AttributeError):
             bulk_sku = None
         return {
             'name': mode_for_seat(seat),

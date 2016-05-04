@@ -80,7 +80,7 @@ class ProductAttributeValueSerializer(serializers.ModelSerializer):
             return serializer.data
         if obj.attribute.name == ENROLLMENT_CODE:
             request = self.context.get('request')
-            product_serializer = ProductSerializer(obj.value, many=False, context={'request': request})
+            product_serializer = ProductSerializer(obj.value, context={'request': request})
             return product_serializer.data
         return obj.value
 

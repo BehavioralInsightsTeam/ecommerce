@@ -87,13 +87,22 @@ class ProductViewSetTests(ProductViewSetBase):
         # Create another course and seat to confirm filtering.
         other_course = Course.objects.create(id='edX/DemoX/XYZ', name='Test Course 2')
         other_course.create_or_update_seat('honor', False, 0, self.partner)
-
         path = reverse('api:v2:course-product-list', kwargs={'parent_lookup_course_id': self.course.id})
         response = self.client.get(path)
         self.assertEqual(response.status_code, 200)
         results = [self.serialize_product(p) for p in self.course.products.all()]
         expected = {'count': 2, 'next': None, 'previous': None, 'results': results}
         self.assertDictEqual(json.loads(response.content), expected)
+
+    def test_enrollment_code_serialization(self):
+        """ Verify the view supports listing seats with enrollment codes. """
+        course = Course.objects.create(id='edX/DemoX/EC', name='EC Course')
+        seat = course.create_or_update_seat('verified', False, 100, self.partner, create_enrollment_code=True)
+        path = reverse('api:v2:product-detail', kwargs={'pk': seat.id})
+        response = self.client.get(path)
+        response_data = json.loads(response.content)
+        expected = self.serialize_product(seat)
+        self.assertDictEqual(expected, response_data)
 
     def test_get_partner_products(self):
         """Verify the endpoint returns the list of products associated with a

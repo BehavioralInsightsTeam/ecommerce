@@ -17,6 +17,7 @@ from requests.exceptions import ConnectionError, Timeout
 
 from ecommerce.core.constants import ENROLLMENT_CODE
 from ecommerce.core.url_utils import get_ecommerce_url, get_lms_enrollment_api_url, get_lms_url
+from ecommerce.courses.models import Course
 from ecommerce.courses.utils import mode_for_seat
 from ecommerce.extensions.analytics.utils import audit_log, parse_tracking_context
 from ecommerce.extensions.fulfillment.status import LINE
@@ -392,7 +393,6 @@ class EnrollmentCodeFulfillmentModule(BaseFulfillmentModule):
             order_number=order.number
         )
         logger.info(msg)
-        csv_lines = []
 
         for line in lines:
             name = 'Enrollment Code Range for {}'.format(line.product.attr.course_key)
@@ -424,16 +424,14 @@ class EnrollmentCodeFulfillmentModule(BaseFulfillmentModule):
             for voucher in vouchers:
                 line_vouchers.vouchers.add(voucher)
 
-            csv_line = {
-                'title': line.product.title,
-                'vouchers': vouchers
-            }
-            csv_lines.append(csv_line)
             line.set_status(LINE.COMPLETE)
+
+        # Note (multi-courses): Change from a course_name to a list of course names.
+        course_name = Course.objects.get(id=lines.first().product.attr.course_key).name
 
         send_notification(order.user, 'ORDER_WITH_CSV', context={
             'contact_url': get_lms_url('/contact'),
-            'course_name': order.lines.first().product.course.name,
+            'course_name': course_name,
             'download_csv_link': get_ecommerce_url(reverse('coupons:enrollment_code_csv', args=[order.number])),
             'enrollment_code_title': lines[0].product.title,
             'order_number': order.number,

@@ -433,10 +433,11 @@ class CouponSerializer(ProductPaymentInfoMixin, serializers.ModelSerializer):
         if offer.condition.range.catalog:
             stockrecords = offer.condition.range.catalog.stock_records.all()
             seats = Product.objects.filter(id__in=[sr.product.id for sr in stockrecords])
-            serializer = ProductSerializer(seats, many=True, context={'request': self.context['request']})
-            return serializer.data
         else:
-            return None
+            seats = None
+
+        serializer = ProductSerializer(seats, many=True, context={'request': self.context['request']})
+        return serializer.data
 
     def get_client(self, obj):
         basket = Basket.objects.filter(lines__product_id=obj.id).first()

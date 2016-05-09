@@ -37,15 +37,10 @@ def create_enrollment_code_product_class(apps, schema_editor):
         required=True
     )
 
-    Switch = apps.get_model('waffle', 'Switch')
-    Switch.objects.get_or_create(name='create_enrollment_codes', defaults={'active': True})
-
 
 def remove_enrollment_code_product_class(apps, schema_editor):
     """Remove the Enrollment code product class and the waffle switch."""
     ProductClass.objects.filter(name=ENROLLMENT_CODE_PRODUCT_CLASS_NAME).delete()
-    Switch = apps.get_model('waffle', 'Switch')
-    Switch.objects.filter(name='create_enrollment_codes').delete()
 
 
 class Migration(migrations.Migration):

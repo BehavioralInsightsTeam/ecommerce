@@ -7,7 +7,6 @@ from oscar.core.loading import get_model
 import pytz
 
 from ecommerce.courses.models import Course
-from ecommerce.courses.tests.factories import CourseFactory
 from ecommerce.extensions.api.v2.tests.views import JSON_CONTENT_TYPE, ProductSerializerMixin
 from ecommerce.extensions.catalogue.tests.mixins import CourseCatalogTestMixin
 from ecommerce.tests.mixins import CouponMixin
@@ -94,16 +93,6 @@ class ProductViewSetTests(ProductViewSetBase):
         results = [self.serialize_product(p) for p in self.course.products.all()]
         expected = {'count': 2, 'next': None, 'previous': None, 'results': results}
         self.assertDictEqual(json.loads(response.content), expected)
-
-    def test_enrollment_code_serialization(self):
-        """ Verify the view supports listing seats with enrollment codes. """
-        course = CourseFactory()
-        seat = course.create_or_update_seat('verified', False, 100, self.partner, create_enrollment_code=True)
-        path = reverse('api:v2:product-detail', kwargs={'pk': seat.id})
-        response = self.client.get(path)
-        response_data = json.loads(response.content)
-        expected = self.serialize_product(seat)
-        self.assertDictEqual(expected, response_data)
 
     def test_get_partner_products(self):
         """Verify the endpoint returns the list of products associated with a

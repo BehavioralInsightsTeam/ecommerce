@@ -517,3 +517,6 @@ DEFAULT_SITE_THEME = None
 THEME_CACHE_TIMEOUT = 30 * 60
 
 # End Theme settings
+
+# Enrollment codes settings
+ENROLLMENT_CODE_SWITCH = 'create_enrollment_codes'

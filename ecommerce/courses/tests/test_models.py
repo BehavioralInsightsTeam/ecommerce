@@ -1,10 +1,12 @@
 import ddt
+from django.conf import settings
 import mock
 from oscar.core.loading import get_model
 from oscar.test.factories import create_order
 from oscar.test.newfactories import BasketFactory
+from waffle.models import Switch
 
-from ecommerce.core.constants import ENROLLMENT_CODE
+from ecommerce.core.constants import ENROLLMENT_CODE_PRODUCT_CLASS_NAME
 from ecommerce.courses.models import Course
 from ecommerce.courses.publishers import LMSPublisher
 from ecommerce.courses.tests.factories import CourseFactory
@@ -13,6 +15,7 @@ from ecommerce.tests.testcases import TestCase
 
 Product = get_model('catalogue', 'Product')
 ProductClass = get_model('catalogue', 'ProductClass')
+StockRecord = get_model('partner', 'StockRecord')
 
 
 @ddt.ddt
@@ -89,7 +92,7 @@ class CourseTests(CourseCatalogTestMixin, TestCase):
         self.assertEqual(parent.attr.course_key, course.id)
 
     def assert_course_seat_valid(self, seat, course, certificate_type, id_verification_required, price,
-                                 credit_provider=None, credit_hours=None, create_enrollment_code=False):
+                                 credit_provider=None, credit_hours=None):
         """ Ensure the given seat has the correct attribute values. """
         self.assertEqual(seat.structure, Product.CHILD)
         # pylint: disable=protected-access
@@ -105,10 +108,6 @@ class CourseTests(CourseCatalogTestMixin, TestCase):
 
         if credit_hours:
             self.assertEqual(seat.attr.credit_hours, credit_hours)
-
-        if create_enrollment_code:
-            enrollment_code = Product.objects.get(product_class__name=ENROLLMENT_CODE)
-            self.assertEqual(seat.attr.enrollment_code, enrollment_code)
 
     def test_create_or_update_seat(self):
         """ Verify the method creates or updates a seat Product. """
@@ -135,21 +134,22 @@ class CourseTests(CourseCatalogTestMixin, TestCase):
         self.assert_course_seat_valid(seat, course, certificate_type, id_verification_required, price)
 
     def test_create_seat_with_enrollment_code(self):
-        """Verify an enrollment code product is created and added as an attribute to the seat."""
+        """Verify an enrollment code product is created."""
         course = CourseFactory()
         certificate_type = 'verified'
-        id_verification_required = True
         price = 5
-        create_enrollment_code = True
+        switch, __ = Switch.objects.get_or_create(name=settings.ENROLLMENT_CODE_SWITCH, defaults={'active': True})
+        switch.active = True
+        switch.save()
+        course.create_or_update_seat(certificate_type, True, price, self.partner)
 
-        seat = course.create_or_update_seat(
-            certificate_type, id_verification_required, price,
-            self.partner, create_enrollment_code=create_enrollment_code
-        )
-        self.assert_course_seat_valid(
-            seat, course, certificate_type, id_verification_required,
-            price, create_enrollment_code=create_enrollment_code
-        )
+        enrollment_code = Product.objects.get(product_class__name=ENROLLMENT_CODE_PRODUCT_CLASS_NAME)
+        self.assertEqual(enrollment_code.attr.course_key, course.id)
+        self.assertEqual(enrollment_code.attr.seat_type, certificate_type)
+        self.assertEqual(enrollment_code.attr.seat_type, certificate_type)
+
+        stock_record = StockRecord.objects.get(product=enrollment_code)
+        self.assertEqual(stock_record.price_excl_tax, price)
 
     def test_create_credit_seats(self):
         """Verify that the model's seat creation method allows the creation of multiple credit seats."""

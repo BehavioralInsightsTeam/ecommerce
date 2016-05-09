@@ -4,7 +4,7 @@ import logging
 from oscar.core.loading import get_model
 from oscar.test import factories
 
-from ecommerce.core.constants import ENROLLMENT_CODE
+from ecommerce.core.constants import ENROLLMENT_CODE_PRODUCT_CLASS_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ class CourseCatalogTestMixin(object):
 
     @property
     def enrollment_code_product_class(self):
-        defaults = {'requires_shipping': False, 'track_stock': False, 'name': ENROLLMENT_CODE}
+        defaults = {'requires_shipping': False, 'track_stock': False, 'name': ENROLLMENT_CODE_PRODUCT_CLASS_NAME}
         pc, created = ProductClass.objects.get_or_create(slug='enrollment_code', defaults=defaults)
 
         if created:

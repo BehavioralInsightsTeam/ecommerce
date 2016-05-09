@@ -9,10 +9,12 @@ from edx_rest_api_client.exceptions import SlumberHttpBaseException
 from oscar.core.loading import get_model
 import requests
 
+from ecommerce.core.constants import ENROLLMENT_CODE_PRODUCT_CLASS_NAME
 from ecommerce.core.url_utils import get_lms_url, get_lms_commerce_api_url
 from ecommerce.courses.utils import mode_for_seat
 
 logger = logging.getLogger(__name__)
+Product = get_model('catalogue', 'Product')
 StockRecord = get_model('partner', 'StockRecord')
 
 
@@ -32,8 +34,15 @@ class LMSPublisher(object):
         """ Serializes a course seat product to a dict that can be further serialized to JSON. """
         stock_record = seat.stockrecords.first()
         try:
-            bulk_sku = StockRecord.objects.get(product=seat.attr.enrollment_code).partner_sku
-        except (StockRecord.DoesNotExist, AttributeError):
+            enrollment_code = Product.objects.filter(
+                product_class__name=ENROLLMENT_CODE_PRODUCT_CLASS_NAME,
+                course__id=seat.attr.course_key
+            ).get(
+                attributes__name='seat_type',
+                attribute_values__value_text=seat.attr.certificate_type
+            )
+            bulk_sku = StockRecord.objects.get(product=enrollment_code).partner_sku
+        except (StockRecord.DoesNotExist, Product.DoesNotExist):
             bulk_sku = None
         return {
             'name': mode_for_seat(seat),

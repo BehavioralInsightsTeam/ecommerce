@@ -3,7 +3,7 @@ from django.test import RequestFactory
 from oscar.core.loading import get_class, get_model
 from oscar.test.newfactories import ProductAttributeValueFactory
 
-from ecommerce.core.constants import ENROLLMENT_CODE, ISO_8601_FORMAT
+from ecommerce.core.constants import ENROLLMENT_CODE_PRODUCT_CLASS_NAME, ISO_8601_FORMAT
 from ecommerce.extensions.api.serializers import OrderSerializer
 from ecommerce.extensions.test import factories
 from ecommerce.tests.mixins import ThrottlingMixin
@@ -49,13 +49,7 @@ class OrderDetailViewTestMixin(ThrottlingMixin):
 class ProductSerializerMixin(object):
     def serialize_product(self, product):
         """ Serializes a Product to a Python dict. """
-        attribute_values = [
-            {
-                'name': av.attribute.name,
-                'value': av.value if av.attribute.name != ENROLLMENT_CODE else self.serialize_product(av.value),
-            }
-            for av in product.attribute_values.all()
-        ]
+        attribute_values = [{'name': av.attribute.name, 'value': av.value} for av in product.attribute_values.all()]
         data = {
             'id': product.id,
             'url': self.get_full_url(reverse('api:v2:product-detail', kwargs={'pk': product.id})),

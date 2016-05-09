@@ -185,7 +185,7 @@ class Course(models.Model):
         seat.attr.id_verification_required = id_verification_required
 
         if waffle.switch_is_active('create_enrollment_codes'):
-            enrollment_code = self._create_or_update_enrollment_code(course_id, certificate_type, partner, price)
+            self._create_or_update_enrollment_code(course_id, certificate_type, partner, price)
 
         if credit_provider:
             seat.attr.credit_provider = credit_provider
@@ -254,18 +254,17 @@ class Course(models.Model):
                 course=self
             ).get(
                 attributes__name='seat_type',
-                attribute_values__value_text=certificate_type  
+                attribute_values__value_text=certificate_type
             )
         except Product.DoesNotExist:
             title = 'Enrollment code for {seat_type} seat in {course_name}'.format(
                 seat_type=certificate_type,
                 course_name=self.name
             )
-            enrollment_code = Product.objects.create(
-                title=title,
-                product_class=enrollment_code_product_class,
-                course=self
-            )
+            enrollment_code = Product()
+            enrollment_code.title = title
+            enrollment_code.product_class = enrollment_code_product_class
+            enrollment_code.course = self
 
         enrollment_code.attr.course_key = course_id
         enrollment_code.attr.seat_type = certificate_type
@@ -276,8 +275,8 @@ class Course(models.Model):
         except StockRecord.DoesNotExist:
             enrollment_code_sku = generate_sku(enrollment_code, partner)
             stock_record = StockRecord()
-            stock_record.product = enrollment_code,
-            stock_record.partner = partner,
+            stock_record.product = enrollment_code
+            stock_record.partner = partner
             stock_record.partner_sku = enrollment_code_sku
 
         stock_record.price_excl_tax = price

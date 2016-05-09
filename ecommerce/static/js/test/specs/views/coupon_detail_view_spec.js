@@ -110,6 +110,33 @@ define([
                 expect(view.renderVoucherTable).toHaveBeenCalled();
             });
 
+            it('should render course data', function () {
+                view.model.set('catalog_type', 'Single course');
+                view.model.set('course_id', 'a/b/c');
+                view.model.set('seat_type', 'Verified');
+
+                view.render();
+
+                var course_info = view.$el.find('.course-info');
+                expect(course_info.children('.value').length).toEqual(1);
+                expect(course_info.children('.value').text()).toEqual('a/b/cVerified');
+
+                view.model.set('catalog_type', 'Multiple courses');
+                view.model.set('courses', [
+                    {'course_id': 'a/b/c', 'seat_type': 'Verified'},
+                    {'course_id': 'c/d/e', 'seat_type': 'Honor'}
+                ]);
+                view.model.set('catalog-query', '*:*');
+
+                view.render();
+
+                course_info = view.$el.find('.course-info');
+
+                expect(course_info.children('.value').length).toEqual(2);
+                expect(course_info.children('.value').text()).toEqual('a/b/cVerifiedc/d/eHonor');
+                expect(view.$el.find('.catalog-query > .value').text()).toEqual('*:*');
+            });
+
             it('should display data table', function () {
                 view.renderVoucherTable();
                 expect(view.$el.find('#vouchersTable').DataTable().autowidth).toBeFalsy();

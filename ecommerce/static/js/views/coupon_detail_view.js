@@ -135,7 +135,7 @@ define([
                                 course.course_id,
                                 course.seat_type)
                         );
-                    });
+                    }, this);
 
                     this.$el.find('.catalog-query > .value').text(this.model.get('catalog-query'));
                 }

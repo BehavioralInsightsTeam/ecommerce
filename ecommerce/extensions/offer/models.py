@@ -5,7 +5,7 @@ from django.db import models
 from jsonfield.fields import JSONField
 from oscar.apps.offer.abstract_models import AbstractRange
 
-from core.url_utils import get_course_discovery_client
+from ecommerce.core.url_utils import get_course_discovery_client
 
 logger = logging.getLogger(__name__)
 
@@ -19,9 +19,9 @@ class Range(AbstractRange):
         if self.catalog_query:
             try:
                 response = get_course_discovery_client().\
-                           api.v1.course_runs.contains.get(query=self.catalog_query,
-                                                           course_ids=product.course_id,
-                                                           seat_types=",".join(self.course_seat_types))
+                    api.v1.course_runs.contains.get(query=self.catalog_query,
+                                                    course_ids=product.course_id,
+                                                    seat_types=",".join(self.course_seat_types))
                 if (product.attr.certificate_type.lower() in [seat.lower() for seat in self.course_seat_types]):
                     return ((response[product.course_id][product.attr.certificate_type.lower()]) or
                             super(Range, self).contains_product(product))  # pylint: disable=bad-super-call

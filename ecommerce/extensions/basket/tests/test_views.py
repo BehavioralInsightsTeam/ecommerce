@@ -1,6 +1,7 @@
 import datetime
 import hashlib
 import json
+import httpretty
 
 import ddt
 from django.conf import settings
@@ -26,6 +27,7 @@ from ecommerce.extensions.test.factories import prepare_voucher
 from ecommerce.tests.factories import StockRecordFactory
 from ecommerce.tests.mixins import CouponMixin, LmsApiMockMixin
 from ecommerce.tests.testcases import TestCase
+from acceptance_tests.config import ENROLLMENT_API_URL
 
 Applicator = get_class('offer.utils', 'Applicator')
 Basket = get_model('basket', 'Basket')
@@ -46,9 +48,9 @@ class BasketSingleItemViewTests(CouponMixin, CourseCatalogTestMixin, LmsApiMockM
         self.user = self.create_user()
         self.client.login(username=self.user.username, password=self.password)
 
-        course = CourseFactory()
-        course.create_or_update_seat('verified', True, 50, self.partner)
-        product = course.create_or_update_seat('verified', False, 0, self.partner)
+        self.course = CourseFactory()
+        self.course.create_or_update_seat('verified', True, 50, self.partner)
+        product = self.course.create_or_update_seat('verified', False, 0, self.partner)
         self.stock_record = StockRecordFactory(product=product, partner=self.partner)
         self.catalog = Catalog.objects.create(partner=self.partner)
         self.catalog.stock_records.add(self.stock_record)
@@ -76,8 +78,12 @@ class BasketSingleItemViewTests(CouponMixin, CourseCatalogTestMixin, LmsApiMockM
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.content, expected_content)
 
+    @httpretty.activate
     def test_unavailable_product(self):
         """ The view should return HTTP 400 if the product is not available for purchase. """
+        url = '{host}/enrollment/{username},{course_id}'.format(host=ENROLLMENT_API_URL, username=self.user.username,
+                                                                course_id=self.course.id)
+        httpretty.register_uri(httpretty.GET, url, body=json.dumps({"mode": "audit"}), content_type="application/json")
         product = self.stock_record.product
         product.expires = pytz.utc.localize(datetime.datetime.min)
         product.save()
@@ -94,6 +100,9 @@ class BasketSingleItemViewTests(CouponMixin, CourseCatalogTestMixin, LmsApiMockM
         """
         Verify the view redirects to the basket summary page, and that the user's basket is prepared for checkout.
         """
+        url = '{host}/enrollment/{username},{course_id}'.format(host=ENROLLMENT_API_URL, username=self.user.username,
+                                                                course_id=self.course.id)
+        httpretty.register_uri(httpretty.GET, url, body=json.dumps({"mode": "audit"}), content_type="application/json")
         self.create_coupon(catalog=self.catalog, code=COUPON_CODE, benefit_value=5)
 
         self.mock_footer_api_response()
@@ -109,6 +118,22 @@ class BasketSingleItemViewTests(CouponMixin, CourseCatalogTestMixin, LmsApiMockM
         self.assertEqual(basket.lines.count(), 1)
         self.assertTrue(basket.contains_a_voucher)
         self.assertEqual(basket.lines.first().product, self.stock_record.product)
+
+    @httpretty.activate
+    def test_already_verified_student(self):
+        """
+        Verify the view return HTTP 400 if the student is already enrolled as verified student in the course
+        """
+        url = '{host}/enrollment/{username},{course_id}'.format(host=ENROLLMENT_API_URL, username=self.user.username,
+                                                                course_id=self.course.id)
+        httpretty.register_uri(httpretty.GET, url, body=json.dumps({"mode": "verified"}),
+                               content_type="application/json")
+        url = '{path}?sku={sku}'.format(path=self.path, sku=self.stock_record.partner_sku)
+        expected_content = 'You have already bought the Product [{product}].'.format(
+                            product=self.stock_record.product.title)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.content, expected_content)
 
 
 @httpretty.activate

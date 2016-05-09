@@ -13,6 +13,7 @@ from oscar.apps.basket.views import *  # pylint: disable=wildcard-import, unused
 from edx_rest_api_client.client import EdxRestApiClient
 from slumber.exceptions import SlumberBaseException
 
+from acceptance_tests.api import EnrollmentApiClient
 from ecommerce.core.url_utils import get_lms_url
 from ecommerce.coupons.views import get_voucher_from_code
 from ecommerce.courses.utils import mode_for_seat
@@ -21,7 +22,6 @@ from ecommerce.extensions.api.data import get_lms_footer
 from ecommerce.extensions.basket.utils import get_certificate_type_display_value, prepare_basket
 from ecommerce.extensions.offer.utils import format_benefit_value
 from ecommerce.extensions.partner.shortcuts import get_partner_for_site
-from acceptance_tests.api import EnrollmentApiClient
 
 Benefit = get_model('offer', 'Benefit')
 logger = logging.getLogger(__name__)
@@ -53,7 +53,7 @@ class BasketSingleItemView(View):
             enrollment_api_client = EnrollmentApiClient()
             status = enrollment_api_client.get_enrollment_status(username=request.user.username, course_id=course_key)
 
-            if status.get('mode') == mode_for_seat(product):
+            if status and status.get('mode') == mode_for_seat(product):
                 return HttpResponseBadRequest(_('You have already bought the Product [{product}].'.format(
                     product=product.title)))
         except StockRecord.DoesNotExist:

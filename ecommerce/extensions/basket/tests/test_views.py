@@ -32,6 +32,7 @@ Applicator = get_class('offer.utils', 'Applicator')
 Basket = get_model('basket', 'Basket')
 Benefit = get_model('offer', 'Benefit')
 Catalog = get_model('catalogue', 'Catalog')
+Product = get_model('catalogue', 'Product')
 Selector = get_class('partner.strategy', 'Selector')
 StockRecord = get_model('partner', 'StockRecord')
 
@@ -179,6 +180,19 @@ class BasketSummaryViewTests(CourseCatalogTestMixin, LmsApiMockMixin, TestCase):
                     u'Failed to retrieve data from Course API for course [{}].'.format(self.course.id)
                 )
             )
+
+    def test_enrollment_code_seat_type(self):
+        """Verify the correct seat type attribute is retrieved."""
+        course = CourseFactory()
+        course.create_or_update_seat('verified', False, 10, self.partner, create_enrollment_code=True)
+        enrollment_code = Product.objects.get(product_class__name='Enrollment code')
+        self.create_basket_and_add_product(enrollment_code)
+        self.mock_course_api_response(course)
+        self.mock_footer_api_response()
+        response = self.client.get(self.path)
+        self.assertEqual(response.status_code, 200)
+        line_data = response.context['formset_lines_data'][0][1]
+        self.assertEqual(line_data['seat_type'], _(enrollment_code.attr.seat_type.capitalize()))
 
     @ddt.data(
         (Benefit.PERCENTAGE, 100),

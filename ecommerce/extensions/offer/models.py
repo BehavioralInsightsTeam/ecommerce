@@ -1,7 +1,13 @@
 # noinspection PyUnresolvedReferences
+import logging
+
 from django.db import models
 from jsonfield.fields import JSONField
 from oscar.apps.offer.abstract_models import AbstractRange
+
+from core.url_utils import get_course_discovery_client
+
+logger = logging.getLogger(__name__)
 
 
 class Range(AbstractRange):
@@ -10,11 +16,18 @@ class Range(AbstractRange):
     course_seat_types = JSONField(null=True)
 
     def contains_product(self, product):
-        # TODO: Add logic to call course_discovery to check the course_run against the query string
-        if self.course_seat_types:
-            return (product.attr.certificate_type.lower() in
-                    [seat.lower() for seat in self.course_seat_types] or  # pylint: disable=not-an-iterable
-                    super(Range, self).contains_product(product))  # pylint: disable=bad-super-call
+        if self.catalog_query:
+            try:
+                response = get_course_discovery_client().\
+                           api.v1.course_runs.contains.get(query=self.catalog_query,
+                                                           course_ids=product.course_id,
+                                                           seat_types=",".join(self.course_seat_types))
+                if (product.attr.certificate_type.lower() in [seat.lower() for seat in self.course_seat_types]):
+                    return ((response[product.course_id][product.attr.certificate_type.lower()]) or
+                            super(Range, self).contains_product(product))  # pylint: disable=bad-super-call
+            except:
+                logger.error('ERROR: Could not contact Course Discovery Service')
+                return False
         elif self.catalog:
             return (
                 product.id in self.catalog.stock_records.values_list('product', flat=True) or
@@ -28,6 +41,7 @@ class Range(AbstractRange):
         return len(self.all_products())
 
     def all_products(self):
+        # TODO:  Get all course runs for query and seat type.
         if self.catalog:
             catalog_products = [record.product for record in self.catalog.stock_records.all()]
             return catalog_products + list(super(Range, self).all_products())  # pylint: disable=bad-super-call

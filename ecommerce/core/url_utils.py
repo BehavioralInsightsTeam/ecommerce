@@ -1,6 +1,6 @@
-from django.conf import settings
-
 from urlparse import urljoin
+
+from django.conf import settings
 
 from threadlocals.threadlocals import get_current_request
 
@@ -62,10 +62,10 @@ def get_course_discovery_client():
 
     # TODO: Cache the access_token for as long as it is valid.
     access_token, __ = EdxRestApiClient.get_oauth_access_token(
-                '{root}/access_token'.format(root=get_oauth2_provider_url()),
-                request.site.siteconfiguration.oauth_settings['SOCIAL_AUTH_EDX_OIDC_KEY'],
-                request.site.siteconfiguration.oauth_settings['SOCIAL_AUTH_EDX_OIDC_SECRET']
-            )
+        '{root}/access_token'.format(root=get_oauth2_provider_url()),
+        request.site.siteconfiguration.oauth_settings['SOCIAL_AUTH_EDX_OIDC_KEY'],
+        request.site.siteconfiguration.oauth_settings['SOCIAL_AUTH_EDX_OIDC_SECRET']
+    )
     course_discovery_client = EdxRestApiClient(
         settings.COURSE_DISCOVERY_ROOT,
         oauth_access_token=access_token

@@ -7,6 +7,7 @@ from oscar.core.loading import get_model
 import pytz
 
 from ecommerce.courses.models import Course
+from ecommerce.courses.tests.factories import CourseFactory
 from ecommerce.extensions.api.v2.tests.views import JSON_CONTENT_TYPE, ProductSerializerMixin
 from ecommerce.extensions.catalogue.tests.mixins import CourseCatalogTestMixin
 from ecommerce.tests.mixins import CouponMixin
@@ -96,7 +97,7 @@ class ProductViewSetTests(ProductViewSetBase):
 
     def test_enrollment_code_serialization(self):
         """ Verify the view supports listing seats with enrollment codes. """
-        course = Course.objects.create(id='edX/DemoX/EC', name='EC Course')
+        course = CourseFactory()
         seat = course.create_or_update_seat('verified', False, 100, self.partner, create_enrollment_code=True)
         path = reverse('api:v2:product-detail', kwargs={'pk': seat.id})
         response = self.client.get(path)

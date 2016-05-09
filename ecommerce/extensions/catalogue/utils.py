@@ -16,21 +16,20 @@ def generate_sku(product, partner, **kwargs):
 
     Example: 76E4E71
     """
-    # Note: This currently supports coupons and seats.
-    # A new product type can be added via a new else if block.
-    if product.product_class and product.product_class.name == 'Coupon':
-        catalog = kwargs.get('catalog', '')
-        _hash = ' '.join((
-            unicode(product.id),
-            unicode(catalog.id),
-            str(partner.id)
-        ))
-    elif product.product_class and product.product_class.name == ENROLLMENT_CODE:
-        _hash = ' '.join((
-            getattr(product.attr, 'course_key', ''),
-            getattr(product.attr, 'seat_type', ''),
-            unicode(partner.id)
-        ))
+    if product.product_class:
+        if product.product_class.name == 'Coupon':
+            catalog = kwargs.get('catalog', '')
+            _hash = ' '.join((
+                unicode(product.id),
+                unicode(catalog.id),
+                str(partner.id)
+            ))
+        elif product.product_class.name == ENROLLMENT_CODE:
+            _hash = ' '.join((
+                getattr(product.attr, 'course_key', ''),
+                getattr(product.attr, 'seat_type', ''),
+                unicode(partner.id)
+            ))
     else:
         # Seats
         _hash = ' '.join((

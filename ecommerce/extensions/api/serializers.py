@@ -73,13 +73,12 @@ class ProductAttributeValueSerializer(serializers.ModelSerializer):
         return instance.attribute.name
 
     def get_value(self, obj):
+        request = self.context.get('request')
         if obj.attribute.name == 'Coupon vouchers':
-            request = self.context.get('request')
             vouchers = obj.value.vouchers.all()
             serializer = VoucherSerializer(vouchers, many=True, context={'request': request})
             return serializer.data
         if obj.attribute.name == ENROLLMENT_CODE:
-            request = self.context.get('request')
             product_serializer = ProductSerializer(obj.value, context={'request': request})
             return product_serializer.data
         return obj.value
@@ -307,7 +306,6 @@ class AtomicPublicationSerializer(serializers.Serializer):  # pylint: disable=ab
                         expires=expires,
                         credit_provider=credit_provider,
                         credit_hours=credit_hours,
-                        create_enrollment_code=settings.AUTOGENERATE_ENROLLMENT_CODES
                     )
 
                 resp_message = course.publish_to_lms(access_token=self.access_token)

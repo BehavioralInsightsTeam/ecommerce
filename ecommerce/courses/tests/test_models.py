@@ -5,7 +5,7 @@ from oscar.core.loading import get_model
 from oscar.test.factories import create_order
 from oscar.test.newfactories import BasketFactory
 
-from ecommerce.core.constants import ENROLLMENT_CODE_PRODUCT_CLASS_NAME
+from ecommerce.core.constants import ENROLLMENT_CODE_PRODUCT_CLASS_NAME, ENROLLMENT_CODE_SWITCH
 from ecommerce.core.tests import toggle_switch
 from ecommerce.courses.models import Course
 from ecommerce.courses.publishers import LMSPublisher
@@ -138,7 +138,7 @@ class CourseTests(CourseCatalogTestMixin, TestCase):
         course = CourseFactory()
         seat_type = 'verified'
         price = 5
-        toggle_switch(settings.ENROLLMENT_CODE_SWITCH, True)
+        toggle_switch(ENROLLMENT_CODE_SWITCH, True)
         course.create_or_update_seat(seat_type, True, price, self.partner)
 
         enrollment_code = Product.objects.get(product_class__name=ENROLLMENT_CODE_PRODUCT_CLASS_NAME)

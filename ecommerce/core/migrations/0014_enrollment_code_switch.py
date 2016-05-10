@@ -4,17 +4,19 @@ from __future__ import unicode_literals
 from django.conf import settings
 from django.db import migrations
 
+from ecommerce.core.constants import ENROLLMENT_CODE_SWITCH
+
 
 def create_switch(apps, schema_editor):
     """Create a switch for automatic creation of enrollment code products."""
     Switch = apps.get_model('waffle', 'Switch')
-    Switch.objects.get_or_create(name=settings.ENROLLMENT_CODE_SWITCH, defaults={'active': False})
+    Switch.objects.get_or_create(name=ENROLLMENT_CODE_SWITCH, defaults={'active': False})
 
 
 def remove_switch(apps, schema_editor):
     """Remove enrollment code switch."""
     Switch = apps.get_model('waffle', 'Switch')
-    Switch.objects.filter(name='create_enrollment_codes').delete()
+    Switch.objects.filter(name=ENROLLMENT_CODE_SWITCH).delete()
 
 
 class Migration(migrations.Migration):

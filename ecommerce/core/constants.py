@@ -7,9 +7,9 @@ ISO_8601_FORMAT = u'%Y-%m-%dT%H:%M:%SZ'
 COURSE_ID_REGEX = r'[^/+]+(/|\+)[^/+]+(/|\+)[^/]+'
 COURSE_ID_PATTERN = r'(?P<course_id>{})'.format(COURSE_ID_REGEX)
 
-# Enrollment code product class name.
-ENROLLMENT_CODE_PRODUCT_CLASS_NAME = 'Enrollment code'
-
+# Enrollment Code constants
+ENROLLMENT_CODE_PRODUCT_CLASS_NAME = 'Enrollment Code'
+ENROLLMENT_CODE_SWITCH = 'create_enrollment_codes'
 
 class Status(object):
     """Health statuses."""

@@ -12,7 +12,7 @@ from rest_framework import serializers
 from rest_framework.reverse import reverse
 import waffle
 
-from ecommerce.core.constants import COURSE_ID_REGEX, ISO_8601_FORMAT
+from ecommerce.core.constants import ISO_8601_FORMAT, COURSE_ID_REGEX
 from ecommerce.core.url_utils import get_ecommerce_url
 from ecommerce.courses.models import Course
 from ecommerce.invoice.models import Invoice
@@ -301,7 +301,7 @@ class AtomicPublicationSerializer(serializers.Serializer):  # pylint: disable=ab
                         partner,
                         expires=expires,
                         credit_provider=credit_provider,
-                        credit_hours=credit_hours
+                        credit_hours=credit_hours,
                     )
 
                 resp_message = course.publish_to_lms(access_token=self.access_token)

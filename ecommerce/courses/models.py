@@ -9,7 +9,7 @@ from oscar.core.loading import get_model
 from simple_history.models import HistoricalRecords
 import waffle
 
-from ecommerce.core.constants import ENROLLMENT_CODE_PRODUCT_CLASS_NAME
+from ecommerce.core.constants import ENROLLMENT_CODE_PRODUCT_CLASS_NAME, ENROLLMENT_CODE_SWITCH
 from ecommerce.courses.publishers import LMSPublisher
 from ecommerce.extensions.catalogue.utils import generate_sku
 
@@ -185,7 +185,7 @@ class Course(models.Model):
         seat.attr.course_key = course_id
         seat.attr.id_verification_required = id_verification_required
 
-        if waffle.switch_is_active('create_enrollment_codes'):
+        if waffle.switch_is_active(ENROLLMENT_CODE_SWITCH):
             self._create_or_update_enrollment_code(certificate_type, partner, price)
 
         if credit_provider:

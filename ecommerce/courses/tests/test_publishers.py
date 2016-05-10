@@ -10,7 +10,7 @@ from oscar.core.loading import get_model
 from requests import Timeout
 from testfixtures import LogCapture
 
-from ecommerce.core.constants import ENROLLMENT_CODE_PRODUCT_CLASS_NAME
+from ecommerce.core.constants import ENROLLMENT_CODE_PRODUCT_CLASS_NAME, ENROLLMENT_CODE_SWITCH
 from ecommerce.core.url_utils import get_lms_url, get_lms_commerce_api_url
 from ecommerce.core.tests import toggle_switch
 from ecommerce.courses.publishers import LMSPublisher
@@ -190,7 +190,7 @@ class LMSPublisherTests(CourseCatalogTestMixin, TestCase):
         self.assertDictEqual(actual, expected)
 
     def test_serialize_seat_with_enrollment_code(self):
-        toggle_switch(settings.ENROLLMENT_CODE_SWITCH, True)
+        toggle_switch(ENROLLMENT_CODE_SWITCH, True)
         seat = self.course.create_or_update_seat('verified', False, 10, self.partner)
         stock_record = seat.stockrecords.first()
         ec_stock_record = StockRecord.objects.get(product__product_class__name=ENROLLMENT_CODE_PRODUCT_CLASS_NAME)

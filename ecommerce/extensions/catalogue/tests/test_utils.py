@@ -29,12 +29,12 @@ class UtilsTests(CourseCatalogTestMixin, TestCase):
         self.course.create_or_update_seat('verified', False, 0, self.partner)
         self.catalog = Catalog.objects.create(name='Test', partner_id=self.partner.id)
 
-    def test_generate_sku_attribute_error(self):
+    def test_generate_sku_with_missing_product_class(self):
         """Verify the method raises an exception if the product class is missing."""
         with self.assertRaises(AttributeError):
             generate_sku(Product(), self.partner)
 
-    def test_generate_sku_error(self):
+    def test_generate_sku_with_unexpected_product_class(self):
         """Verify the method raises an exception for unsupported product class."""
         product = ProductFactory()
         with self.assertRaises(Exception):

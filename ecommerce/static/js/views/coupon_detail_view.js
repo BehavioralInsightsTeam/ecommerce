@@ -125,6 +125,8 @@ define([
                             this.model.get('course_id'),
                             this.model.get('seat_type'))
                     );
+
+                    this.$el.find('.catalog-query').addClass('hidden');
                 } else if (this.model.get('catalog_type') === 'Multiple courses') {
                     var courses = this.model.get('courses');
 
@@ -138,6 +140,7 @@ define([
                     }, this);
 
                     this.$el.find('.catalog-query > .value').text(this.model.get('catalog-query'));
+                    this.$el.find('.catalog-query').removeClass('hidden');
                 }
             },
 

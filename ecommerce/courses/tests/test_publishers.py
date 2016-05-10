@@ -2,13 +2,17 @@ import datetime
 import json
 
 import ddt
+from django.conf import settings
 from django.test import override_settings
 import httpretty
 import mock
+from oscar.core.loading import get_model
 from requests import Timeout
 from testfixtures import LogCapture
 
+from ecommerce.core.constants import ENROLLMENT_CODE_PRODUCT_CLASS_NAME
 from ecommerce.core.url_utils import get_lms_url, get_lms_commerce_api_url
+from ecommerce.core.tests import toggle_switch
 from ecommerce.courses.publishers import LMSPublisher
 from ecommerce.courses.tests.factories import CourseFactory
 from ecommerce.extensions.catalogue.tests.mixins import CourseCatalogTestMixin
@@ -17,6 +21,8 @@ from ecommerce.tests.testcases import TestCase
 EDX_API_KEY = 'edx'
 JSON = 'application/json'
 LOGGER_NAME = 'ecommerce.courses.publishers'
+
+StockRecord = get_model('partner', 'StockRecord')
 
 
 @ddt.ddt
@@ -179,6 +185,23 @@ class LMSPublisherTests(CourseCatalogTestMixin, TestCase):
             'price': int(stock_record.price_excl_tax),
             'sku': stock_record.partner_sku,
             'bulk_sku': None,
+            'expires': None,
+        }
+        self.assertDictEqual(actual, expected)
+
+    def test_serialize_seat_with_enrollment_code(self):
+        toggle_switch(settings.ENROLLMENT_CODE_SWITCH, True)
+        seat = self.course.create_or_update_seat('verified', False, 10, self.partner)
+        stock_record = seat.stockrecords.first()
+        ec_stock_record = StockRecord.objects.get(product__product_class__name=ENROLLMENT_CODE_PRODUCT_CLASS_NAME)
+
+        actual = self.publisher.serialize_seat_for_commerce_api(seat)
+        expected = {
+            'name': 'verified',
+            'currency': 'USD',
+            'price': int(stock_record.price_excl_tax),
+            'sku': stock_record.partner_sku,
+            'bulk_sku': ec_stock_record.partner_sku,
             'expires': None,
         }
         self.assertDictEqual(actual, expected)

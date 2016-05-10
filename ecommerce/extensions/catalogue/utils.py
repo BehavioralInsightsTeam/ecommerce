@@ -28,13 +28,13 @@ def generate_sku(product, partner, **kwargs):
             unicode(catalog.id),
             str(partner.id)
         ))
-    if product_class.name == ENROLLMENT_CODE_PRODUCT_CLASS_NAME:
+    elif product_class.name == ENROLLMENT_CODE_PRODUCT_CLASS_NAME:
         _hash = ' '.join((
             getattr(product.attr, 'course_key', ''),
             getattr(product.attr, 'seat_type', ''),
             unicode(partner.id)
         ))
-    if product_class.name == 'Seat':
+    elif product_class.name == 'Seat':
         _hash = ' '.join((
             getattr(product.attr, 'certificate_type', ''),
             product.attr.course_key,
@@ -42,6 +42,8 @@ def generate_sku(product, partner, **kwargs):
             getattr(product.attr, 'credit_provider', ''),
             str(partner.id)
         ))
+    else:
+        raise Exception('Unexpected product class')
 
     md5_hash = md5(_hash.lower())
     digest = md5_hash.hexdigest()[-7:]

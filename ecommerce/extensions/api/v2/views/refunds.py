@@ -86,17 +86,17 @@ class RefundProcessView(generics.UpdateAPIView):
     def update(self, request, *args, **kwargs):
         APPROVE = 'approve'
         DENY = 'deny'
-        REFUND_PAYMENT_ONLY = 'refund_payment_only'
+        APPROVE_PAYMENT_ONLY = 'approve_payment_only'
 
         action = request.data.get('action', '').lower()
 
-        if action not in (APPROVE, DENY, REFUND_PAYMENT_ONLY):
+        if action not in (APPROVE, DENY, APPROVE_PAYMENT_ONLY):
             raise ParseError('The action [{}] is not valid.'.format(action))
 
         refund = self.get_object()
         result = False
 
-        if action in (APPROVE, REFUND_PAYMENT_ONLY):
+        if action in (APPROVE, APPROVE_PAYMENT_ONLY):
             revoke_fulfillment = True if action == APPROVE else False
             result = refund.approve(revoke_fulfillment=revoke_fulfillment)
         elif action == DENY:

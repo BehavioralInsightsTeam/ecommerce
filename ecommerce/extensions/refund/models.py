@@ -193,7 +193,7 @@ class Refund(StatusMixin, TimeStampedModel):
                 self.set_status(REFUND.PAYMENT_REFUND_ERROR)
                 return False
 
-        if self.status in (REFUND.PAYMENT_REFUNDED, REFUND.REVOCATION_ERROR) and revoke_fulfillment:
+        if revoke_fulfillment and self.status in (REFUND.PAYMENT_REFUNDED, REFUND.REVOCATION_ERROR):
             self._revoke_lines()
 
         if not revoke_fulfillment and self.status == REFUND.PAYMENT_REFUNDED:

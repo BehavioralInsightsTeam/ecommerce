@@ -9,7 +9,11 @@ from oscar.core.loading import get_model
 from simple_history.models import HistoricalRecords
 import waffle
 
-from ecommerce.core.constants import ENROLLMENT_CODE_PRODUCT_CLASS_NAME, ENROLLMENT_CODE_SWITCH
+from ecommerce.core.constants import (
+    ENROLLMENT_CODE_PRODUCT_CLASS_NAME,
+    ENROLLMENT_CODE_SEAT_TYPES,
+    ENROLLMENT_CODE_SWITCH
+)
 from ecommerce.courses.publishers import LMSPublisher
 from ecommerce.extensions.catalogue.utils import generate_sku
 
@@ -185,7 +189,7 @@ class Course(models.Model):
         seat.attr.course_key = course_id
         seat.attr.id_verification_required = id_verification_required
 
-        if waffle.switch_is_active(ENROLLMENT_CODE_SWITCH):
+        if waffle.switch_is_active(ENROLLMENT_CODE_SWITCH) and certificate_type in ENROLLMENT_CODE_SEAT_TYPES:
             self._create_or_update_enrollment_code(certificate_type, partner, price)
 
         if credit_provider:
@@ -242,14 +246,13 @@ class Course(models.Model):
 
     def _create_or_update_enrollment_code(self, seat_type, partner, price):
         """
-        Creates an enrollment code product for the created seat, setting the course ID
-        and seat type in it's attributes. Also creates a purchasable stock record for the
-        enrollment code product.
+        Creates an enrollment code product and corresponding stock record for the specified seat.
+        Includes course ID and seat type as product attributes.
 
         Args:
             seat_type (str): Seat type.
             partner (Partner): Seat provider set in the stock record.
-            price (int): Price of the seat.
+            price (Decimal): Price of the seat.
 
         Returns:
             Enrollment code product.

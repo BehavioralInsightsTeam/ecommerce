@@ -34,7 +34,7 @@ class LMSPublisher(object):
         stock_record = seat.stockrecords.first()
         try:
             enrollment_code = seat.course.enrollment_code_product
-            bulk_sku = StockRecord.objects.get(product=enrollment_code).partner_sku
+            bulk_sku = enrollment_code.stockrecords.first().partner_sku
         except Product.DoesNotExist:
             bulk_sku = None
         return {

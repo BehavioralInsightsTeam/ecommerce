@@ -2,7 +2,6 @@ import datetime
 import json
 
 import ddt
-from django.conf import settings
 from django.test import override_settings
 import httpretty
 import mock

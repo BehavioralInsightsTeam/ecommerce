@@ -31,6 +31,10 @@ def get_lms_enrollment_api_url():
     return get_lms_url('/api/enrollment/v1/enrollment')
 
 
+def get_lms_enrollment_base_api_url():
+    return get_lms_url('/api/enrollment/v1')
+
+
 def get_lms_heartbeat_url():
     return get_lms_url('/heartbeat')
 

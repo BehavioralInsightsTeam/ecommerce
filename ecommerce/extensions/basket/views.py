@@ -13,8 +13,7 @@ from oscar.apps.basket.views import *  # pylint: disable=wildcard-import, unused
 from edx_rest_api_client.client import EdxRestApiClient
 from slumber.exceptions import SlumberBaseException
 
-from acceptance_tests.api import EnrollmentApiClient
-from ecommerce.core.url_utils import get_lms_url
+from ecommerce.core.url_utils import get_lms_url, get_lms_enrollment_base_api_url
 from ecommerce.coupons.views import get_voucher_from_code
 from ecommerce.courses.utils import mode_for_seat
 from ecommerce.extensions.analytics.utils import prepare_analytics_data
@@ -50,8 +49,10 @@ class BasketSingleItemView(View):
         try:
             product = StockRecord.objects.get(partner=partner, partner_sku=sku).product
             course_key = product.attr.course_key
-            enrollment_api_client = EnrollmentApiClient()
-            status = enrollment_api_client.get_enrollment_status(username=request.user.username, course_id=course_key)
+
+            api = EdxRestApiClient(get_lms_enrollment_base_api_url(), oauth_access_token=request.user.access_token,
+                                   append_slash=False)
+            status = api.enrollment(request.user.username + "," + course_key).get()
 
             if status and status.get('mode') == mode_for_seat(product):
                 return HttpResponseBadRequest(_('You have already bought the Product [{product}].'.format(

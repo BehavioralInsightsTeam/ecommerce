@@ -1,7 +1,6 @@
 import datetime
 import hashlib
 import json
-import httpretty
 
 import ddt
 from django.conf import settings
@@ -16,7 +15,7 @@ from requests.exceptions import ConnectionError, Timeout
 from slumber.exceptions import SlumberBaseException
 from testfixtures import LogCapture
 
-from acceptance_tests.config import ENROLLMENT_API_URL
+from ecommerce.core.url_utils import get_lms_enrollment_api_url
 from ecommerce.core.models import SiteConfiguration
 from ecommerce.core.tests import toggle_switch
 from ecommerce.core.url_utils import get_lms_url
@@ -55,6 +54,12 @@ class BasketSingleItemViewTests(CouponMixin, CourseCatalogTestMixin, LmsApiMockM
         self.catalog = Catalog.objects.create(partner=self.partner)
         self.catalog.stock_records.add(self.stock_record)
 
+    def mock_enrollment_api(self, mode="audit"):
+        self.assertTrue(httpretty.is_enabled())
+        url = '{host}/{username},{course_id}'.format(host=get_lms_enrollment_api_url(), username=self.user.username,
+                                                     course_id=self.course.id)
+        httpretty.register_uri(httpretty.GET, url, body=json.dumps({"mode": mode}), content_type="application/json")
+
     def test_login_required(self):
         """ The view should redirect to login page if the user is not logged in. """
         self.client.logout()
@@ -81,9 +86,7 @@ class BasketSingleItemViewTests(CouponMixin, CourseCatalogTestMixin, LmsApiMockM
     @httpretty.activate
     def test_unavailable_product(self):
         """ The view should return HTTP 400 if the product is not available for purchase. """
-        url = '{host}/enrollment/{username},{course_id}'.format(host=ENROLLMENT_API_URL, username=self.user.username,
-                                                                course_id=self.course.id)
-        httpretty.register_uri(httpretty.GET, url, body=json.dumps({"mode": "audit"}), content_type="application/json")
+        self.mock_enrollment_api()
         product = self.stock_record.product
         product.expires = pytz.utc.localize(datetime.datetime.min)
         product.save()
@@ -100,9 +103,7 @@ class BasketSingleItemViewTests(CouponMixin, CourseCatalogTestMixin, LmsApiMockM
         """
         Verify the view redirects to the basket summary page, and that the user's basket is prepared for checkout.
         """
-        url = '{host}/enrollment/{username},{course_id}'.format(host=ENROLLMENT_API_URL, username=self.user.username,
-                                                                course_id=self.course.id)
-        httpretty.register_uri(httpretty.GET, url, body=json.dumps({"mode": "audit"}), content_type="application/json")
+        self.mock_enrollment_api()
         self.create_coupon(catalog=self.catalog, code=COUPON_CODE, benefit_value=5)
 
         self.mock_footer_api_response()
@@ -124,13 +125,10 @@ class BasketSingleItemViewTests(CouponMixin, CourseCatalogTestMixin, LmsApiMockM
         """
         Verify the view return HTTP 400 if the student is already enrolled as verified student in the course
         """
-        url = '{host}/enrollment/{username},{course_id}'.format(host=ENROLLMENT_API_URL, username=self.user.username,
-                                                                course_id=self.course.id)
-        httpretty.register_uri(httpretty.GET, url, body=json.dumps({"mode": "verified"}),
-                               content_type="application/json")
+        self.mock_enrollment_api(mode="verified")
         url = '{path}?sku={sku}'.format(path=self.path, sku=self.stock_record.partner_sku)
-        expected_content = 'You have already bought the Product [{product}].'.format(
-                            product=self.stock_record.product.title)
+        expected_content = 'You have already bought the Product [{product}].'.format(product=
+                                                                                     self.stock_record.product.title)
         response = self.client.get(url)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.content, expected_content)

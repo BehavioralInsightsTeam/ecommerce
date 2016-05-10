@@ -127,8 +127,9 @@ class BasketSingleItemViewTests(CouponMixin, CourseCatalogTestMixin, LmsApiMockM
         """
         self.mock_enrollment_api(mode="verified")
         url = '{path}?sku={sku}'.format(path=self.path, sku=self.stock_record.partner_sku)
-        expected_content = 'You have already bought the Product [{product}].'.format(product=
-                                                                                     self.stock_record.product.title)
+        expected_content = 'You have already bought the Product [{product}].'.format(
+            product=self.stock_record.product.title
+        )
         response = self.client.get(url)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.content, expected_content)

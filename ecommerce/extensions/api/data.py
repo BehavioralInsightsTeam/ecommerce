@@ -49,32 +49,3 @@ def get_order_metadata(basket):
 
     return metadata
 
-
-def get_lms_footer():
-    """
-    Retrieve LMS footer via branding API.
-
-    Returns:
-        str: HTML representation of the footer.
-    """
-    try:
-        footer_api_url = get_lms_url('api/branding/v1/footer')
-        response = requests.get(
-            footer_api_url,
-            data={'language': 'en'}
-        )
-        if response.status_code == 200:
-            return response.text
-        else:
-            logger.error(
-                'Unable to retrieve footer from %s. Branding API returned status code %d.',
-                footer_api_url,
-                response.status_code
-            )
-            return None
-    except requests.exceptions.ConnectionError:
-        logger.exception('Connection error occurred while retrieving footer from %s.', get_lms_url())
-        return None
-    except requests.Timeout:
-        logger.exception('Connection timed out while retrieving footer from %s.', get_lms_url())
-        return None

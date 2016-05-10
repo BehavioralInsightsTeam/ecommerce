@@ -1,5 +1,4 @@
 """Common settings and globals."""
-import datetime
 import os
 from os.path import basename, normpath
 from sys import path

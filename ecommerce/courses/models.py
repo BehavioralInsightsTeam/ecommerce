@@ -9,6 +9,7 @@ from oscar.core.loading import get_model
 from simple_history.models import HistoricalRecords
 import waffle
 
+from ecommerce.core.constants import ENROLLMENT_CODE_PRODUCT_CLASS_NAME
 from ecommerce.courses.publishers import LMSPublisher
 from ecommerce.extensions.catalogue.utils import generate_sku
 
@@ -185,7 +186,7 @@ class Course(models.Model):
         seat.attr.id_verification_required = id_verification_required
 
         if waffle.switch_is_active('create_enrollment_codes'):
-            self._create_or_update_enrollment_code(course_id, certificate_type, partner, price)
+            self._create_or_update_enrollment_code(certificate_type, partner, price)
 
         if credit_provider:
             seat.attr.credit_provider = credit_provider
@@ -231,15 +232,22 @@ class Course(models.Model):
 
         return seat
 
-    def _create_or_update_enrollment_code(self, course_id, certificate_type, partner, price):
+    @property
+    def enrollment_code_product(self):
+        """ Returns an enrollment code Product related to this course. """
+        return Product.objects.get(
+            product_class__name=ENROLLMENT_CODE_PRODUCT_CLASS_NAME,
+            course=self
+        )
+
+    def _create_or_update_enrollment_code(self, seat_type, partner, price):
         """
         Creates an enrollment code product for the created seat, setting the course ID
         and seat type in it's attributes. Also creates a purchasable stock record for the
         enrollment code product.
 
         Args:
-            course_id (str): ID of the seat's course.
-            certificate_type (str): Seat type.
+            seat_type (str): Seat type.
             partner (Partner): Seat provider set in the stock record.
             price (int): Price of the seat.
 
@@ -247,37 +255,32 @@ class Course(models.Model):
             Enrollment code product.
         """
 
-        enrollment_code_product_class = ProductClass.objects.get(slug='enrollment_code')
+        enrollment_code_product_class = ProductClass.objects.get(name=ENROLLMENT_CODE_PRODUCT_CLASS_NAME)
         try:
-            enrollment_code = Product.objects.filter(
-                product_class=enrollment_code_product_class,
-                course=self
-            ).get(
-                attributes__name='seat_type',
-                attribute_values__value_text=certificate_type
-            )
+            enrollment_code = self.enrollment_code_product
         except Product.DoesNotExist:
             title = 'Enrollment code for {seat_type} seat in {course_name}'.format(
-                seat_type=certificate_type,
+                seat_type=seat_type,
                 course_name=self.name
             )
-            enrollment_code = Product()
-            enrollment_code.title = title
-            enrollment_code.product_class = enrollment_code_product_class
-            enrollment_code.course = self
-
-        enrollment_code.attr.course_key = course_id
-        enrollment_code.attr.seat_type = certificate_type
+            enrollment_code = Product(
+                title=title,
+                product_class=enrollment_code_product_class,
+                course=self
+            )
+        enrollment_code.attr.course_key = self.id
+        enrollment_code.attr.seat_type = seat_type
         enrollment_code.save()
 
         try:
             stock_record = StockRecord.objects.get(product=enrollment_code, partner=partner)
         except StockRecord.DoesNotExist:
             enrollment_code_sku = generate_sku(enrollment_code, partner)
-            stock_record = StockRecord()
-            stock_record.product = enrollment_code
-            stock_record.partner = partner
-            stock_record.partner_sku = enrollment_code_sku
+            stock_record = StockRecord(
+                product=enrollment_code,
+                partner=partner,
+                partner_sku=enrollment_code_sku
+            )
 
         stock_record.price_excl_tax = price
         stock_record.price_currency = settings.OSCAR_DEFAULT_CURRENCY

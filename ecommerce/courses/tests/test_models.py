@@ -4,9 +4,9 @@ import mock
 from oscar.core.loading import get_model
 from oscar.test.factories import create_order
 from oscar.test.newfactories import BasketFactory
-from waffle.models import Switch
 
 from ecommerce.core.constants import ENROLLMENT_CODE_PRODUCT_CLASS_NAME
+from ecommerce.core.tests import toggle_switch
 from ecommerce.courses.models import Course
 from ecommerce.courses.publishers import LMSPublisher
 from ecommerce.courses.tests.factories import CourseFactory
@@ -136,20 +136,19 @@ class CourseTests(CourseCatalogTestMixin, TestCase):
     def test_create_seat_with_enrollment_code(self):
         """Verify an enrollment code product is created."""
         course = CourseFactory()
-        certificate_type = 'verified'
+        seat_type = 'verified'
         price = 5
-        switch, __ = Switch.objects.get_or_create(name=settings.ENROLLMENT_CODE_SWITCH, defaults={'active': True})
-        switch.active = True
-        switch.save()
-        course.create_or_update_seat(certificate_type, True, price, self.partner)
+        toggle_switch(settings.ENROLLMENT_CODE_SWITCH, True)
+        course.create_or_update_seat(seat_type, True, price, self.partner)
 
         enrollment_code = Product.objects.get(product_class__name=ENROLLMENT_CODE_PRODUCT_CLASS_NAME)
         self.assertEqual(enrollment_code.attr.course_key, course.id)
-        self.assertEqual(enrollment_code.attr.seat_type, certificate_type)
-        self.assertEqual(enrollment_code.attr.seat_type, certificate_type)
+        self.assertEqual(enrollment_code.attr.seat_type, seat_type)
 
         stock_record = StockRecord.objects.get(product=enrollment_code)
         self.assertEqual(stock_record.price_excl_tax, price)
+        self.assertEqual(stock_record.price_currency, settings.OSCAR_DEFAULT_CURRENCY)
+        self.assertEqual(stock_record.partner, self.partner)
 
     def test_create_credit_seats(self):
         """Verify that the model's seat creation method allows the creation of multiple credit seats."""

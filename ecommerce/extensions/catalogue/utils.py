@@ -16,22 +16,25 @@ def generate_sku(product, partner, **kwargs):
 
     Example: 76E4E71
     """
-    if product.product_class:
-        if product.product_class.name == 'Coupon':
-            catalog = kwargs.get('catalog', '')
-            _hash = ' '.join((
-                unicode(product.id),
-                unicode(catalog.id),
-                str(partner.id)
-            ))
-        elif product.product_class.name == ENROLLMENT_CODE_PRODUCT_CLASS_NAME:
-            _hash = ' '.join((
-                getattr(product.attr, 'course_key', ''),
-                getattr(product.attr, 'seat_type', ''),
-                unicode(partner.id)
-            ))
-    else:
-        # Seats
+    product_class = product.get_product_class()
+
+    if not product_class:
+        raise AttributeError('Product has no product class')
+
+    if product_class.name == 'Coupon':
+        catalog = kwargs.get('catalog', '')
+        _hash = ' '.join((
+            unicode(product.id),
+            unicode(catalog.id),
+            str(partner.id)
+        ))
+    if product_class.name == ENROLLMENT_CODE_PRODUCT_CLASS_NAME:
+        _hash = ' '.join((
+            getattr(product.attr, 'course_key', ''),
+            getattr(product.attr, 'seat_type', ''),
+            unicode(partner.id)
+        ))
+    if product_class.name == 'Seat':
         _hash = ' '.join((
             getattr(product.attr, 'certificate_type', ''),
             product.attr.course_key,

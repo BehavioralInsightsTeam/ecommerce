@@ -87,6 +87,7 @@ class ProductViewSetTests(ProductViewSetBase):
         # Create another course and seat to confirm filtering.
         other_course = Course.objects.create(id='edX/DemoX/XYZ', name='Test Course 2')
         other_course.create_or_update_seat('honor', False, 0, self.partner)
+
         path = reverse('api:v2:course-product-list', kwargs={'parent_lookup_course_id': self.course.id})
         response = self.client.get(path)
         self.assertEqual(response.status_code, 200)

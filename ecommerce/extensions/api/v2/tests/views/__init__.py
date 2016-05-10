@@ -3,7 +3,7 @@ from django.test import RequestFactory
 from oscar.core.loading import get_class, get_model
 from oscar.test.newfactories import ProductAttributeValueFactory
 
-from ecommerce.core.constants import ENROLLMENT_CODE_PRODUCT_CLASS_NAME, ISO_8601_FORMAT
+from ecommerce.core.constants import ISO_8601_FORMAT
 from ecommerce.extensions.api.serializers import OrderSerializer
 from ecommerce.extensions.test import factories
 from ecommerce.tests.mixins import ThrottlingMixin

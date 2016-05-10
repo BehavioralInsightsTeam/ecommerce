@@ -28,38 +28,44 @@ class CourseCatalogTestMixin(object):
         self.enrollment_code_product_class  # pylint: disable=pointless-statement
         self.category, _created = Category.objects.get_or_create(name='Seats', defaults={'depth': 1})
 
-    @property
-    def seat_product_class(self):
-        defaults = {'requires_shipping': False, 'track_stock': False, 'name': 'Seat'}
-        pc, created = ProductClass.objects.get_or_create(slug='seat', defaults=defaults)
+    def _create_product_class(self, class_name, slug, attributes):
+        """ Helper method for creating product classes.
+
+        Args:
+            class_name (str): Name of the product class.
+            slug (str): Slug of the product class.
+            attributes (tuple): Tuple of tuples where each contains attribute name and type.
+
+        Returns:
+            ProductClass object.
+        """
+
+        defaults = {'requires_shipping': False, 'track_stock': False, 'name': class_name}
+        pc, created = ProductClass.objects.get_or_create(slug=slug, defaults=defaults)
 
         if created:
-            attributes = (
-                ('certificate_type', 'text'),
-                ('course_key', 'text'),
-                ('credit_provider', 'text'),
-                ('id_verification_required', 'boolean'),
-                ('credit_hours', 'integer'),
-                ('enrollment_code', 'entity')
-            )
-
             for code, attr_type in attributes:
                 factories.ProductAttributeFactory(code=code, name=code, product_class=pc, type=attr_type)
 
         return pc
+
+    @property
+    def seat_product_class(self):
+        attributes = (
+            ('certificate_type', 'text'),
+            ('course_key', 'text'),
+            ('credit_provider', 'text'),
+            ('id_verification_required', 'boolean'),
+            ('credit_hours', 'integer'),
+        )
+        product_class = self._create_product_class('Seat', 'seat', attributes)
+        return product_class
 
     @property
     def enrollment_code_product_class(self):
-        defaults = {'requires_shipping': False, 'track_stock': False, 'name': ENROLLMENT_CODE_PRODUCT_CLASS_NAME}
-        pc, created = ProductClass.objects.get_or_create(slug='enrollment_code', defaults=defaults)
-
-        if created:
-            attributes = (
-                ('seat_type', 'text'),
-                ('course_key', 'text')
-            )
-
-            for code, attr_type in attributes:
-                factories.ProductAttributeFactory(code=code, name=code, product_class=pc, type=attr_type)
-
-        return pc
+        attributes = (
+            ('seat_type', 'text'),
+            ('course_key', 'text')
+        )
+        product_class = self._create_product_class(ENROLLMENT_CODE_PRODUCT_CLASS_NAME, 'enrollment_code', attributes)
+        return product_class

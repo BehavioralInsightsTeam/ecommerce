@@ -212,7 +212,7 @@ class RefundProcessViewTests(ThrottlingMixin, TestCase):
             self.assertEqual(response.data, RefundSerializer(self.refund).data)
 
     @mock.patch('ecommerce.extensions.refund.models.Refund._issue_credit')
-    def test_success_refund_payment_only(self, mock_issue_credit):
+    def test_success_approve_payment_only(self, mock_issue_credit):
         """ If the action succeeds, the view should return HTTP 200 and the serialized Refund. """
         def mock_fulfillment(refund_obj):
             for refund_line in refund_obj.lines.all():
@@ -223,7 +223,7 @@ class RefundProcessViewTests(ThrottlingMixin, TestCase):
         with mock.patch("ecommerce.extensions.fulfillment.api.revoke_fulfillment_for_refund",
                         side_effect=mock_fulfillment):
             with mock.patch("ecommerce.extensions.refund.models.logger") as patched_log:
-                response = self.put('refund_payment_only')
+                response = self.put('approve_payment_only')
                 self.assertEqual(response.status_code, 200)
                 refund = Refund.objects.get(id=self.refund.id)
                 self.assertEqual(response.data['status'], refund.status)
@@ -233,7 +233,7 @@ class RefundProcessViewTests(ThrottlingMixin, TestCase):
 
     @ddt.data(
         ('approve', 'approve'),
-        ('approve', 'refund_payment_only'),
+        ('approve', 'approve_payment_only'),
         ('deny', 'deny')
     )
     @ddt.unpack

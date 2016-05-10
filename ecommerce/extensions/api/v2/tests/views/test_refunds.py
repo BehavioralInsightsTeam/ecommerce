@@ -203,23 +203,13 @@ class RefundProcessViewTests(ThrottlingMixin, TestCase):
         response = self.put('reject')
         self.assertEqual(response.status_code, 400)
 
-    @mock.patch('ecommerce.extensions.refund.models.Refund._issue_credit')
-    def test_success_approve(self, mock_issue_credit):
+    @ddt.data('approve', 'deny')
+    def test_success(self, action):
         """ If the action succeeds, the view should return HTTP 200 and the serialized Refund. """
-        def mock_fulfillment(refund_obj):
-            for refund_line in refund_obj.lines.all():
-                refund_line.set_status(REFUND_LINE.COMPLETE)
-
-        mock_issue_credit.return_value = None
-
-        with mock.patch("ecommerce.extensions.fulfillment.api.revoke_fulfillment_for_refund",
-                        side_effect=mock_fulfillment):
-            response = self.put('approve')
+        with mock.patch('ecommerce.extensions.refund.models.Refund.{}'.format(action), mock.Mock(return_value=True)):
+            response = self.put(action)
             self.assertEqual(response.status_code, 200)
-            refund = Refund.objects.get(id=self.refund.id)
-
-            self.assertEqual(response.data['status'], refund.status)
-            self.assertEqual(response.data['status'], "Complete")
+            self.assertEqual(response.data, RefundSerializer(self.refund).data)
 
     @mock.patch('ecommerce.extensions.refund.models.Refund._issue_credit')
     def test_success_refund_payment_only(self, mock_issue_credit):
@@ -240,23 +230,6 @@ class RefundProcessViewTests(ThrottlingMixin, TestCase):
                 self.assertEqual(response.data['status'], "Complete")
                 patched_log.info.assert_called_once_with(
                     "Skipping the revocation step for refund [%d].", self.refund.id)
-
-    @mock.patch('ecommerce.extensions.refund.models.Refund._issue_credit')
-    def test_success_deny(self, mock_issue_credit):
-        """ If the action succeeds, the view should return HTTP 200 and the serialized Refund. """
-        def mock_fulfillment(refund_obj):
-            for refund_line in refund_obj.lines.all():
-                refund_line.set_status(REFUND_LINE.COMPLETE)
-
-        mock_issue_credit.return_value = None
-
-        with mock.patch("ecommerce.extensions.fulfillment.api.revoke_fulfillment_for_refund",
-                        side_effect=mock_fulfillment):
-            response = self.put('deny')
-            self.assertEqual(response.status_code, 200)
-            refund = Refund.objects.get(id=self.refund.id)
-            self.assertEqual(response.data['status'], refund.status)
-            self.assertEqual(response.data['status'], "Denied")
 
     @ddt.data(
         ('approve', 'approve'),

@@ -8,8 +8,10 @@ Selector = get_class('partner.strategy', 'Selector')
 
 
 class Basket(AbstractBasket):
-    site = models.ForeignKey('sites.Site', verbose_name=_("Site"), null=True, blank=True, default=None,
-                             on_delete=models.SET_NULL)
+    site = models.ForeignKey(
+        'sites.Site', verbose_name=_("Site"), null=True, blank=True, default=None, on_delete=models.SET_NULL
+    )
+    affiliate_id = models.CharField(_('Affiliate ID'), null=True, default=None, max_length=255)
 
     @property
     def order_number(self):

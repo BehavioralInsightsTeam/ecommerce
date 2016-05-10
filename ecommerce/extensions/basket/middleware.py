@@ -2,6 +2,7 @@ from oscar.apps.basket.middleware import BasketMiddleware as OscarBasketMiddlewa
 from oscar.core.loading import get_model
 
 Basket = get_model('basket', 'basket')
+AFFILIATE_COOKIE_KEY = 'affiliate_partner'
 
 
 class BasketMiddleware(OscarBasketMiddleware):
@@ -18,6 +19,30 @@ class BasketMiddleware(OscarBasketMiddleware):
         key = super(BasketMiddleware, self).get_cookie_key(request)
         key = '{base}_{site_id}'.format(base=key, site_id=request.site.id)
         return key
+
+    def get_affiliate_cookie_key(self, request):
+        """
+        Return the affiliate cookie name for referral attribution.
+
+        Parameters:
+            request (Request) -- current request being processed
+
+        Returns:
+            str - cookie name
+        """
+        return '{base}_{site_id}'.format(base=AFFILIATE_COOKIE_KEY, site_id=request.site.id)
+
+    def get_affiliate_id(self, cookie_key, request):
+        """
+        Return the affiliate cookie name for referral attribution.
+
+        Parameters:
+            request (Request) -- current request being processed
+
+        Returns:
+            str - cookie name
+        """
+        return request.COOKIES.get(cookie_key)
 
     def get_basket(self, request):
         """ Return the open basket for this request """
@@ -57,6 +82,11 @@ class BasketMiddleware(OscarBasketMiddleware):
         else:
             # Anonymous user with no basket - instantiate a new basket instance.  No need to save yet.
             basket = Basket(site=request.site)
+
+        # Add affiliate referral information to basket
+        affiliate_cookie_key = self.get_affiliate_cookie_key(request)
+        affiliate_id = self.get_affiliate_id(affiliate_cookie_key, request)
+        basket.affiliate_id = affiliate_id
 
         # Cache basket instance for the duration of this request
         request._basket_cache = basket
